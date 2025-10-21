@@ -50,6 +50,7 @@ space= [\t\r\f\n\ ]
 SEMICOLON = ";"
 IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
 INTNUMBER = [-|+]?(0|[1-9][0-9]*)
+EOF = <<EOF>>
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -68,7 +69,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 /*Lexical Rules*/
 %%
 
-
+/* Rules for STRING state */
 <YYINITIAL>"\"" {
     System.out.println("Start of a string literal");
     yybegin(STRING); // Switch to STRING state
@@ -84,7 +85,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 
 <STRING>[^\"\n\r]+ {
 		System.out.println("Inside string literal: " + yytext());
-    CharNum.num += yytext().length(); // Consume any other characters inside strings
+    CharNum.num += yytext().length(); // Consme any other characters inside strings
 }
 
 <STRING>[\n|\r] {
@@ -93,6 +94,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
     // Handle error for unterminated string
 }
 
+/* Rules for YYINITIAL state */
 {SEMICOLON} {
 										System.out.println("Found a semicolon");
 										Symbol S = new Symbol(sym.SEMICOLON, new TokenVal(yyline+1, CharNum.num));
@@ -185,6 +187,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 	   }
 
 
+
 <YYINITIAL>{IDENTIFIER} {
 										System.out.println("Found identifier named: " + yytext());
 										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
@@ -194,7 +197,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 }
 
 
-
+/* Rules for COMMENT state (Block Comment) */
 <YYINITIAL>"/*" {
 			yybegin(COMMENT);
 }
@@ -211,9 +214,11 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
 
+/* Rules for SINGLELINE_COMMENT state (single line comment) */
 <YYINITIAL>"//" {
 			yybegin(SINGLELINE_COMMENT);
 }
+
 <SINGLELINE_COMMENT>.|\n {
 		if (yytext().equals("\n")) {
 				yybegin(YYINITIAL);
