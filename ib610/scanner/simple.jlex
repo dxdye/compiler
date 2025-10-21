@@ -1,0 +1,171 @@
+
+/* User Code */
+import java_cup.runtime.*; // defines the Symbol class
+
+// The generated scanner will return a Symbol for each token that it finds.
+// A Symbol contains an Object field named value; that field will be of type
+// TokenVal, defined below.
+//
+// A TokenVal object contains the line number on which the token occurs as
+// well as the number of the character on that line that starts the token.
+// Some tokens (e.g., literals) also include the value of the token.
+
+class TokenVal {
+ // fields
+    int linenum;
+    int charnum;
+ // constructor
+    TokenVal(int l, int c) {
+        linenum = l;
+				charnum = c;
+    }
+}
+
+class IntLitTokenVal extends TokenVal {
+ // new field: the value of the integer literal
+    int intVal;
+ // constructor
+    IntLitTokenVal(int l, int c, int val) {
+        super(l,c);
+				intVal = val;
+    }
+}
+
+
+// The following class is used to keep track of the character number at which
+// the current token starts on its line.
+class CharNum {
+  static int num=1;
+}
+/* Options and declarations */
+%%
+
+DIGIT=		[0-9]
+WHITESPACE=	[\ \t\n]
+space= [\t\r\f\n\ ]
+SEMICOLON = ";"
+VARIABLENAME = [a-zA-Z_][a-zA-Z0-9_]*
+// NUMBERS = \d+\.?\d*
+// INTLITERAL_REGEX = -?{DIGIT}+	
+
+// The next 3 lines are included so that we can use the generated scanner
+// with java CUP (the Java parser generator)
+%implements java_cup.runtime.Scanner
+%function next_token
+%type java_cup.runtime.Symbol
+
+// Tell JLex what to do on end-of-file
+%eofval{
+						return new Symbol(sym.EOF);
+%eofval}
+
+// Turn on line counting
+%line
+
+/*Lexical Rules*/
+%%
+
+
+{SEMICOLON} {
+										System.out.println("Found a semicolon");
+										Symbol S = new Symbol(sym.SEMICOLON, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+
+"+"	 {
+					Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
+	    		CharNum.num++;
+	    		return S;
+	   }
+
+"-" {
+					Symbol S = new Symbol(sym.MINUS, new TokenVal(yyline+1, CharNum.num));
+	    		CharNum.num++;
+	    		return S;
+	   }
+
+
+
+
+"System.out.println" {
+										System.out.println("Found a println");
+										Symbol S = new Symbol(sym.SYSTEMOUTPRINTLN, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+"int" {
+										System.out.println("Found an int");
+										Symbol S = new Symbol(sym.INT, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+
+
+"do" {
+										System.out.println("Found a do");
+										Symbol S = new Symbol(sym.DO, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+"case" {
+										System.out.println("Found a case");
+										Symbol S = new Symbol(sym.CASE, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+"default" {
+										System.out.println("Found a default");
+										Symbol S = new Symbol(sym.DEFAULT, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+"&&" {
+										System.out.println("Found a &&");
+										Symbol S = new Symbol(sym.AND, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+"switch" {
+										System.out.println("Found a switch");
+										Symbol S = new Symbol(sym.SWITCH, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+
+"and" {
+										System.out.println("Found an and");
+										Symbol S = new Symbol(sym.AND, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+	   }
+"=" {
+										System.out.println("Found an assignment operator");
+										Symbol S = new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+}
+{DIGIT}+ {// NOTE: the following computation of the integer value does NOT
+	    //       check for overflow.  This must be changed.
+	    int val = Integer.parseInt(yytext());
+	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, val));
+	    CharNum.num += yytext().length();
+	    return S;
+	   }
+
+{WHITESPACE}+  {CharNum.num += yytext().length();}
+{VARIABLENAME} {
+										System.out.println("Found a variable name: " + yytext());
+										Symbol S = new Symbol(sym.VARIABLENAME, new TokenVal(yyline+1, CharNum.num));
+										CharNum.num += yytext().length();
+										return S;
+
+}
+	    
+.	   {
+	
+					Errors.fatal(yyline+1, CharNum.num,
+					"ignoring illegal character: " + yytext());
+					CharNum.num++;
+	   }
+
