@@ -151,8 +151,9 @@ INTNUMBER = -?[0-9]+
 
 {INTNUMBER} {// NOTE: the following computation of the integer value does NOT
 	    //       check for overflow.  This must be changed.
-	    int val = Integer.parseInt(yytext());
-	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, val));
+			System.out.println("Found an integer literal: " + yytext());	
+	    long val = Long.parseLong(yytext());
+	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, (int) val));
 	    CharNum.num += yytext().length();
 	    return S;
 	   }
@@ -166,10 +167,11 @@ INTNUMBER = -?[0-9]+
 
 }
 	    
-.	   {
+/* .	   {
 	
 					Errors.fatal(yyline+1, CharNum.num,
 					"ignoring illegal character: " + yytext());
 					CharNum.num++;
 	   }
 
+*/
