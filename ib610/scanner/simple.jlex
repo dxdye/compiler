@@ -32,6 +32,15 @@ class IntLitTokenVal extends TokenVal {
     }
 }
 
+class StringTokenVal extends TokenVal {
+ // new field: the value of the integer literal
+    String str;
+ // constructor
+    StringTokenVal(int l, int c, String val) {
+        super(l,c);
+				str = val;
+    }
+}
 
 // The following class is used to keep track of the character number at which
 // the current token starts on its line.
@@ -44,6 +53,7 @@ class CharNum {
 %state SINGLELINE_COMMENT
 %state STRING 
 %state YYINITIAL
+%state STRING_ESCAPE
 
 DIGIT=		[0-9]
 WHITESPACE=	[\ \t\n]
@@ -82,28 +92,25 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
     yybegin(STRING); // Switch to STRING state
 }
 
+
 <STRING>"\"" {
-		System.out.println("Parsed String Literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
-    System.out.println("End of parsing string literal..");
+    System.out.println("End of a string literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
     yybegin(YYINITIAL); // Return to the initial state
-    Symbol S = new Symbol(sym.STRINGLITERAL, new TokenVal(yyline+1, CharNum.num));
-    CharNum.num += yytext().length();
+    Symbol S = new Symbol(sym.STRINGLITERAL, new StringTokenVal(yyline+1, CharNum.num, stringBuffers.get(stringBuffers.size() - 1).toString()));
+		CharNum.num += yytext().length();
     return S;
 }
 
-<STRING>[^\"\n\r]+ {
-		stringBuffers.get(stringBuffers.size() - 1).append(yytext());
-    CharNum.num += yytext().length(); // Consme any other characters inside strings
-}
 
-<STRING>\\n {
+
+<STRING>[\\n|\\r] {
     System.out.println("Unterminated string literal");
-		switch(yytext().charAt(0)) {
-			case '\n':
+		switch(yytext()) {
+			case "\n":
 				stringBuffers.get(stringBuffers.size() - 1).append('\n');
 				CharNum.num += 2; // Reset character number at the start of a new line
 				break;
-			case '\r':
+			case "\r":
 				stringBuffers.get(stringBuffers.size() - 1).append('\r');
 				CharNum.num += 2; // Reset character number at the start of a new line
 				break;
@@ -113,6 +120,16 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 		}
 		
     yybegin(YYINITIAL); // Return to the initial state
+}
+
+<STRING>\\{
+	yybegin(STRING_ESCAPE);
+
+}
+
+<STRING>[^\"\n\r\\]+ {
+		stringBuffers.get(stringBuffers.size() - 1).append(yytext());
+    CharNum.num += yytext().length(); // Consme any other characters inside strings
 }
 <STRING><<EOF>> {
 		System.out.println("Unterminated string literal at EOF");
@@ -253,13 +270,12 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 			yybegin(SINGLELINE_COMMENT);
 }
 
-<SINGLELINE_COMMENT>.|[\n|\r] {
-		if (yytext().equals("\n")) {
+<SINGLELINE_COMMENT>[\n|\r] {
 				yybegin(YYINITIAL);
 				CharNum.num++; // Move to the next line
-		} else {
+}	
+<SINGLELINE_COMMENT>. {
 				CharNum.num += yytext().length(); // Consume characters in single-line comment
-		}
 }
 <SINGLELINE_COMMENT><<EOF>> {
 		yybegin(YYINITIAL); // Return to the initial state

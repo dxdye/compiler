@@ -5,12 +5,14 @@
 int y = -2147483648;
 int x = 2147483648;
 x = 2147483647;
-int y = -2147483648;
+int y = -2147483648; 
 999999999999
 y = -2147483649;
-do case default switch and && 
+do case default switch and &&  
 myVal = "Hello, World! \n Dude!"
 myVal2 = "Why not work? ahhhh"
 myVal3 = "Why are you ignoring my newline characters? \r \n I dont understand"
 
 a = +0
+//my comment 2
+/// my comment - why is my comment eating my string!!
