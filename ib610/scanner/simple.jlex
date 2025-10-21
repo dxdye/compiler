@@ -44,7 +44,7 @@ DIGIT=		[0-9]
 WHITESPACE=	[\ \t\n]
 space= [\t\r\f\n\ ]
 SEMICOLON = ";"
-VARIABLENAME = [a-zA-Z_][a-zA-Z0-9_]*
+IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
 // NUMBERS = \d+\.?\d*
 INTNUMBER = -?[0-9]+	
 
@@ -73,6 +73,8 @@ INTNUMBER = -?[0-9]+
 										return S;
 	   }
 
+
+
 "+"	 {
 					Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
 	    		CharNum.num++;
@@ -96,7 +98,7 @@ INTNUMBER = -?[0-9]+
 	   }
 "int" {
 										System.out.println("Found an int");
-										Symbol S = new Symbol(sym.INT, new TokenVal(yyline+1, CharNum.num));
+										Symbol S = new Symbol(sym.INT, new TokenVal(yyline+1, CharNum.num)); //int type is actually long
 										CharNum.num += yytext().length();
 										return S;
 	   }
@@ -159,19 +161,21 @@ INTNUMBER = -?[0-9]+
 	   }
 
 
-{VARIABLENAME} {
+{IDENTIFIER} {
 										System.out.println("Found a variable name: " + yytext());
-										Symbol S = new Symbol(sym.VARIABLENAME, new TokenVal(yyline+1, CharNum.num));
+										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
 										CharNum.num += yytext().length();
 										return S;
 
 }
+
+
 	    
-/* .	   {
+.	   {
 	
 					Errors.fatal(yyline+1, CharNum.num,
 					"ignoring illegal character: " + yytext());
 					CharNum.num++;
 	   }
 
-*/
+

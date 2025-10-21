@@ -52,7 +52,7 @@ public class sym {
   public static final int CASE = 42;
   public static final int DEFAULT = 43;
   public static final int SYSTEMOUTPRINTLN = 40;
-  public static final int VARIABLENAME = 40;
+  public static final int IDENTIFIER = 40;
 
 }
 
