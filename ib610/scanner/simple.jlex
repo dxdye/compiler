@@ -39,14 +39,17 @@ class CharNum {
 }
 /* Options and declarations */
 %%
+%state COMMENT
+%state SINGLELINE_COMMENT
+%state STRING 
+%state YYINITIAL
 
 DIGIT=		[0-9]
 WHITESPACE=	[\ \t\n]
 space= [\t\r\f\n\ ]
 SEMICOLON = ";"
 IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
-// NUMBERS = \d+\.?\d*
-INTNUMBER = -?[0-9]+	
+INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -65,6 +68,30 @@ INTNUMBER = -?[0-9]+
 /*Lexical Rules*/
 %%
 
+
+<YYINITIAL>"\"" {
+    System.out.println("Start of a string literal");
+    yybegin(STRING); // Switch to STRING state
+}
+
+<STRING>"\"" {
+    System.out.println("End of a string literal: " + yytext());
+    yybegin(YYINITIAL); // Return to the initial state
+    Symbol S = new Symbol(sym.STRINGLITERAL, new TokenVal(yyline+1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+<STRING>[^\"\n\r]+ {
+		System.out.println("Inside string literal: " + yytext());
+    CharNum.num += yytext().length(); // Consume any other characters inside strings
+}
+
+<STRING>[\n|\r] {
+    System.out.println("Unterminated string literal");
+    yybegin(YYINITIAL); // Return to the initial state
+    // Handle error for unterminated string
+}
 
 {SEMICOLON} {
 										System.out.println("Found a semicolon");
@@ -86,9 +113,6 @@ INTNUMBER = -?[0-9]+
 	    		CharNum.num++;
 	    		return S;
 	   }
-
-
-
 
 "System.out.println" {
 										System.out.println("Found a println");
@@ -161,8 +185,8 @@ INTNUMBER = -?[0-9]+
 	   }
 
 
-{IDENTIFIER} {
-										System.out.println("Found a variable name: " + yytext());
+<YYINITIAL>{IDENTIFIER} {
+										System.out.println("Found identifier named: " + yytext());
 										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
 										CharNum.num += yytext().length();
 										return S;
@@ -170,12 +194,37 @@ INTNUMBER = -?[0-9]+
 }
 
 
+
+<YYINITIAL>"/*" {
+			yybegin(COMMENT);
+}
+<COMMENT>{WHITESPACE}+  {
+	CharNum.num += yytext().length();
+	}
+
+
+<COMMENT>"*/" {
+			yybegin(YYINITIAL);
+}
+
+<COMMENT>. {
+    CharNum.num += yytext().length(); // Consume any other characters inside comments
+}
+
+<YYINITIAL>"//" {
+			yybegin(SINGLELINE_COMMENT);
+}
+<SINGLELINE_COMMENT>.|\n {
+		if (yytext().equals("\n")) {
+				yybegin(YYINITIAL);
+				CharNum.num++; // Move to the next line
+		} else {
+				CharNum.num += yytext().length(); // Consume characters in single-line comment
+		}
+}
 	    
 .	   {
-	
 					Errors.fatal(yyline+1, CharNum.num,
 					"ignoring illegal character: " + yytext());
 					CharNum.num++;
 	   }
-
-

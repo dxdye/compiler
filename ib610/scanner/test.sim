@@ -2,11 +2,14 @@
 22 + 43
 -30 - -40
 
-//my comment
 int y = -2147483648;
 int x = 2147483648;
 x = 2147483647;
 int y = -2147483648;
 999999999999
 y = -2147483649;
-do case default switch and &&
+do case default switch and && /// my comment
+
+a = +0
+
+myVal = "Hello, World! \n Dude!"
