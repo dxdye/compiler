@@ -49,8 +49,8 @@ class CharNum {
 }
 /* Options and declarations */
 %%
-%state COMMENT
-%state SINGLELINE_COMMENT
+%state BLOCKCOMMENT 
+%state SLCOMMENT 
 %state STRING 
 %state YYINITIAL
 %state STRING_ESCAPE
@@ -76,6 +76,9 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 %{
 		//it's a stack - each new string gets pushed on top
     LinkedList<StringBuilder> stringBuffers = new LinkedList<StringBuilder>();
+
+		//found out its probably not needed, however don't want to remove it :D 
+		//probably everythings stored in StringTokenVal anyway
 %}
 
 
@@ -243,45 +246,44 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 }
 
 
-/* Rules for COMMENT state (Block Comment) */
+/* Rules for  BLOCKCOMMENT state (Block Comment) */
 <YYINITIAL>"/*" {
-			yybegin(COMMENT);
+			yybegin( BLOCKCOMMENT);
 }
-<COMMENT>{WHITESPACE}+  {
+< BLOCKCOMMENT>{WHITESPACE}+  {
 	CharNum.num += yytext().length();
 	}
 
 
-<COMMENT>"*/" {
+< BLOCKCOMMENT>"*/" {
 			yybegin(YYINITIAL);
 }
 
-<COMMENT>[^\n\r]+ {
+< BLOCKCOMMENT>[^\n\r]+ {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
-<COMMENT><<EOF>> {
+< BLOCKCOMMENT><<EOF>> {
 		Errors.fatal(yyline+1, CharNum.num,"Unterminated comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
 }   
 
-/* Rules for SINGLELINE_COMMENT state (single line comment) */
+/* Rules for  SLCOMMENT state (single line comment) */
 <YYINITIAL>"//" {
-			yybegin(SINGLELINE_COMMENT);
+			yybegin( SLCOMMENT);
 }
 
-<SINGLELINE_COMMENT>[\n|\r] {
+< SLCOMMENT>\n {
 				yybegin(YYINITIAL);
 				CharNum.num++; // Move to the next line
 }	
-<SINGLELINE_COMMENT>. {
+< SLCOMMENT>. {
 				CharNum.num += yytext().length(); // Consume characters in single-line comment
 }
-<SINGLELINE_COMMENT><<EOF>> {
+< SLCOMMENT><<EOF>> {
 		yybegin(YYINITIAL); // Return to the initial state
 }
 	    
 .	{
-					Errors.fatal(yyline+1, CharNum.num,
-					"ignoring illegal character: " + yytext());
-					CharNum.num++;
-	   }
+	Errors.fatal(yyline+1, CharNum.num, "ignoring illegal character: " + yytext());
+	CharNum.num++;
+}
