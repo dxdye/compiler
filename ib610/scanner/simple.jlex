@@ -46,7 +46,7 @@ space= [\t\r\f\n\ ]
 SEMICOLON = ";"
 VARIABLENAME = [a-zA-Z_][a-zA-Z0-9_]*
 // NUMBERS = \d+\.?\d*
-// INTLITERAL_REGEX = -?{DIGIT}+	
+INTNUMBER = -?[0-9]+	
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -145,7 +145,11 @@ VARIABLENAME = [a-zA-Z_][a-zA-Z0-9_]*
 										CharNum.num += yytext().length();
 										return S;
 }
-{DIGIT}+ {// NOTE: the following computation of the integer value does NOT
+
+
+{WHITESPACE}+  {CharNum.num += yytext().length();}
+
+{INTNUMBER} {// NOTE: the following computation of the integer value does NOT
 	    //       check for overflow.  This must be changed.
 	    int val = Integer.parseInt(yytext());
 	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, val));
@@ -153,7 +157,7 @@ VARIABLENAME = [a-zA-Z_][a-zA-Z0-9_]*
 	    return S;
 	   }
 
-{WHITESPACE}+  {CharNum.num += yytext().length();}
+
 {VARIABLENAME} {
 										System.out.println("Found a variable name: " + yytext());
 										Symbol S = new Symbol(sym.VARIABLENAME, new TokenVal(yyline+1, CharNum.num));
