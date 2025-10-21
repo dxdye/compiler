@@ -103,26 +103,26 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 
 
 
-<STRING>[\\n|\\r] {
-    System.out.println("Unterminated string literal");
+<STRING_ESCAPE>[n|r] {
+    System.out.println("Unterminated string literal" );
 		switch(yytext()) {
-			case "\n":
+			case "n":
 				stringBuffers.get(stringBuffers.size() - 1).append('\n');
 				CharNum.num += 2; // Reset character number at the start of a new line
 				break;
-			case "\r":
+			case "r":
 				stringBuffers.get(stringBuffers.size() - 1).append('\r');
 				CharNum.num += 2; // Reset character number at the start of a new line
 				break;
 			default: 
-				// no reach
+				// shouldn't be reached 
 				break;
 		}
 		
-    yybegin(YYINITIAL); // Return to the initial state
+    yybegin(STRING); 
 }
 
-<STRING>\\{
+<STRING>\\ {
 	yybegin(STRING_ESCAPE);
 
 }
@@ -256,12 +256,11 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 			yybegin(YYINITIAL);
 }
 
-<COMMENT>. {
+<COMMENT>[^\n\r]+ {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
 <COMMENT><<EOF>> {
-		Errors.fatal(yyline+1, CharNum.num,
-					"Unterminated comment at EOF");
+		Errors.fatal(yyline+1, CharNum.num,"Unterminated comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
 }   
 
