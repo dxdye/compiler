@@ -94,7 +94,12 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 		stringBuffers.add(new StringBuilder()); 
     yybegin(STRING); // Switch to STRING state
 }
-
+<YYINITIAL>"NULL" {
+		System.out.println("Found a NULL string literal");
+		Symbol S = new Symbol(sym.STRINGLITERAL, new StringTokenVal(yyline+1, CharNum.num, null));
+		CharNum.num += yytext().length();
+		return S;
+}
 
 <STRING>"\"" {
     System.out.println("End of a string literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
@@ -106,14 +111,17 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 
 
 
-<STRING_ESCAPE>[n|r] {
-    System.out.println("Unterminated string literal" );
+<STRING_ESCAPE>[n|r] { 
+    System.out.println("Unterminated string literal" + yytext());
+
 		switch(yytext()) {
 			case "n":
+				System.out.println("Found newline escape sequence");
 				stringBuffers.get(stringBuffers.size() - 1).append('\n');
 				CharNum.num += 2; // Reset character number at the start of a new line
 				break;
 			case "r":
+				System.out.println("Found carriage return escape sequence");
 				stringBuffers.get(stringBuffers.size() - 1).append('\r');
 				CharNum.num += 2; // Reset character number at the start of a new line
 				break;
@@ -125,9 +133,10 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
     yybegin(STRING); 
 }
 
-<STRING>\\ {
-	yybegin(STRING_ESCAPE);
 
+<STRING>\\ {
+	//should work without - don't know why it doesn't
+	yybegin(STRING_ESCAPE);
 }
 
 <STRING>[^\"\n\r\\]+ {
@@ -250,19 +259,19 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 <YYINITIAL>"/*" {
 			yybegin( BLOCKCOMMENT);
 }
-< BLOCKCOMMENT>{WHITESPACE}+  {
+<BLOCKCOMMENT>{WHITESPACE}+  {
 	CharNum.num += yytext().length();
 	}
 
 
-< BLOCKCOMMENT>"*/" {
+<BLOCKCOMMENT>"*/" {
 			yybegin(YYINITIAL);
 }
 
-< BLOCKCOMMENT>[^\n\r]+ {
+<BLOCKCOMMENT>[^\n\r]+ {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
-< BLOCKCOMMENT><<EOF>> {
+<BLOCKCOMMENT><<EOF>> {
 		Errors.fatal(yyline+1, CharNum.num,"Unterminated comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
 }   
@@ -272,14 +281,14 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 			yybegin( SLCOMMENT);
 }
 
-< SLCOMMENT>\n {
+<SLCOMMENT>\n {
 				yybegin(YYINITIAL);
 				CharNum.num++; // Move to the next line
 }	
-< SLCOMMENT>. {
+<SLCOMMENT>. {
 				CharNum.num += yytext().length(); // Consume characters in single-line comment
 }
-< SLCOMMENT><<EOF>> {
+<SLCOMMENT><<EOF>> {
 		yybegin(YYINITIAL); // Return to the initial state
 }
 	    
