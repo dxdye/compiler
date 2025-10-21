@@ -102,7 +102,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 }
 
 <STRING>"\"" {
-    System.out.println("End of a string literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
+    System.out.println("Resulting string literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
     yybegin(YYINITIAL); // Return to the initial state
     Symbol S = new Symbol(sym.STRINGLITERAL, new StringTokenVal(yyline+1, CharNum.num, stringBuffers.get(stringBuffers.size() - 1).toString()));
 		CharNum.num += yytext().length();
@@ -112,7 +112,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 
 
 <STRING_ESCAPE>[n|r] { 
-    System.out.println("Unterminated string literal" + yytext());
+    System.out.println("Unterminated string literal" );
 
 		switch(yytext()) {
 			case "n":
@@ -258,6 +258,7 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 /* Rules for  BLOCKCOMMENT state (Block Comment) */
 <YYINITIAL>"/*" {
 			yybegin( BLOCKCOMMENT);
+			CharNum.num += 2;
 }
 <BLOCKCOMMENT>{WHITESPACE}+  {
 	CharNum.num += yytext().length();
@@ -266,9 +267,10 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 
 <BLOCKCOMMENT>"*/" {
 			yybegin(YYINITIAL);
+			CharNum.num += 2;
 }
 
-<BLOCKCOMMENT>[^\n\r]+ {
+<BLOCKCOMMENT>. {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
 <BLOCKCOMMENT><<EOF>> {
@@ -279,15 +281,17 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 /* Rules for  SLCOMMENT state (single line comment) */
 <YYINITIAL>"//" {
 			yybegin( SLCOMMENT);
+			CharNum.num += 2;
 }
 
-<SLCOMMENT>\n {
+<SLCOMMENT>[\n|\r] {
 				yybegin(YYINITIAL);
-				CharNum.num++; // Move to the next line
+				CharNum.num += 1; // Move to the next line
 }	
 <SLCOMMENT>. {
 				CharNum.num += yytext().length(); // Consume characters in single-line comment
 }
+
 <SLCOMMENT><<EOF>> {
 		yybegin(YYINITIAL); // Return to the initial state
 }
