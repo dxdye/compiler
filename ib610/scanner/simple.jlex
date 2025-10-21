@@ -1,6 +1,7 @@
 
 /* User Code */
 import java_cup.runtime.*; // defines the Symbol class
+import java.util.LinkedList;
 
 // The generated scanner will return a Symbol for each token that it finds.
 // A Symbol contains an Object field named value; that field will be of type
@@ -50,7 +51,6 @@ space= [\t\r\f\n\ ]
 SEMICOLON = ";"
 IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
 INTNUMBER = [-|+]?(0|[1-9][0-9]*)
-EOF = <<EOF>>
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -60,8 +60,14 @@ EOF = <<EOF>>
 
 // Tell JLex what to do on end-of-file
 %eofval{
-						return new Symbol(sym.EOF);
+						return new Symbol(sym.EOF); 
 %eofval}
+
+%{
+		//it's a stack - each new string gets pushed on top
+    LinkedList<StringBuilder> stringBuffers = new LinkedList<StringBuilder>();
+%}
+
 
 // Turn on line counting
 %line
@@ -71,12 +77,14 @@ EOF = <<EOF>>
 
 /* Rules for STRING state */
 <YYINITIAL>"\"" {
-    System.out.println("Start of a string literal");
+    System.out.println("Start of a parsing string literal..");
+		stringBuffers.add(new StringBuilder()); 
     yybegin(STRING); // Switch to STRING state
 }
 
 <STRING>"\"" {
-    System.out.println("End of a string literal: " + yytext());
+		System.out.println("Parsed String Literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
+    System.out.println("End of parsing string literal..");
     yybegin(YYINITIAL); // Return to the initial state
     Symbol S = new Symbol(sym.STRINGLITERAL, new TokenVal(yyline+1, CharNum.num));
     CharNum.num += yytext().length();
@@ -84,15 +92,36 @@ EOF = <<EOF>>
 }
 
 <STRING>[^\"\n\r]+ {
-		System.out.println("Inside string literal: " + yytext());
+		stringBuffers.get(stringBuffers.size() - 1).append(yytext());
     CharNum.num += yytext().length(); // Consme any other characters inside strings
 }
 
-<STRING>[\n|\r] {
+<STRING>\\n {
     System.out.println("Unterminated string literal");
+		switch(yytext().charAt(0)) {
+			case '\n':
+				stringBuffers.get(stringBuffers.size() - 1).append('\n');
+				CharNum.num += 2; // Reset character number at the start of a new line
+				break;
+			case '\r':
+				stringBuffers.get(stringBuffers.size() - 1).append('\r');
+				CharNum.num += 2; // Reset character number at the start of a new line
+				break;
+			default: 
+				// no reach
+				break;
+		}
+		
     yybegin(YYINITIAL); // Return to the initial state
-    // Handle error for unterminated string
 }
+<STRING><<EOF>> {
+		System.out.println("Unterminated string literal at EOF");
+		System.out.println("Read until EOF: " + stringBuffers.get(stringBuffers.size() - 1).toString());
+		Errors.fatal(yyline+1, CharNum.num,
+					"Unterminated string literal at EOF");
+		yybegin(YYINITIAL); // Return to the initial state
+}
+
 
 /* Rules for YYINITIAL state */
 {SEMICOLON} {
@@ -213,13 +242,18 @@ EOF = <<EOF>>
 <COMMENT>. {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
+<COMMENT><<EOF>> {
+		Errors.fatal(yyline+1, CharNum.num,
+					"Unterminated comment at EOF");
+		yybegin(YYINITIAL); // Return to the initial state
+}   
 
 /* Rules for SINGLELINE_COMMENT state (single line comment) */
 <YYINITIAL>"//" {
 			yybegin(SINGLELINE_COMMENT);
 }
 
-<SINGLELINE_COMMENT>.|\n {
+<SINGLELINE_COMMENT>.|[\n|\r] {
 		if (yytext().equals("\n")) {
 				yybegin(YYINITIAL);
 				CharNum.num++; // Move to the next line
@@ -227,8 +261,11 @@ EOF = <<EOF>>
 				CharNum.num += yytext().length(); // Consume characters in single-line comment
 		}
 }
+<SINGLELINE_COMMENT><<EOF>> {
+		yybegin(YYINITIAL); // Return to the initial state
+}
 	    
-.	   {
+.	{
 					Errors.fatal(yyline+1, CharNum.num,
 					"ignoring illegal character: " + yytext());
 					CharNum.num++;
