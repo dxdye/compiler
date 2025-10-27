@@ -285,20 +285,16 @@ INTNUMBER = [-|+]?(0|[1-9][0-9]*)
 }
 
 
-/*<SLCOMMENT>\r?\n {
-				System.out.println("End of single-line comment"); can't figure out why not working!!!!1 is test.sim corrupted??
+<SLCOMMENT> \n {
+				System.out.println("End of single-line comment"); //can't figure out why not working!!!!1 is test.sim corrupted??
 				//cat -A test.sim shows new line character
-				CharNum.num++; // Consume the newline character
+				CharNum.num += yytext().length(); // Consume the newline character
 				yybegin(YYINITIAL);
-}	*/
+}	
 
-<SLCOMMENT>"//" {
-		CharNum.num += yytext().length(); 	
-		yybegin(YYINITIAL);
 
-}
 
-<SLCOMMENT>. {
+<SLCOMMENT>.|[\r\t\n] {
 				System.out.println("Matched character in comment: " + yytext()); 
 				CharNum.num += yytext().length(); // Consume charcters in single-line comment
 }
