@@ -333,6 +333,36 @@ ILLEGAL_STRING_CHAR = [#&\^]
 	}
 }
 
+/* Rules for BRACKETS */
+<YYINITIAL>{BRACKETS} {
+	Symbol BracketSymbol = null;
+	switch(yytext()) {
+		case "(":
+				System.out.println("Found an open parenthesis");
+				BracketSymbol = new Symbol(sym.LPAREN, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return BracketSymbol;
+		case ")":
+				System.out.println("Found a closed parenthesis");
+				BracketSymbol = new Symbol(sym.RPAREN, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return BracketSymbol;
+		case "{":
+				System.out.println("Found an open curly brace");
+				BracketSymbol = new Symbol(sym.LCURLY, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return BracketSymbol;
+		case "}":
+				System.out.println("Found a closed curly brace");
+				BracketSymbol = new Symbol(sym.RCURLY, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return BracketSymbol;
+		default:
+				// should not be reached
+				break;
+	}
+}
+
 /* Rules for IDENTIFIER */
 <YYINITIAL>{IDENTIFIER} {
 										System.out.println("Found identifier named: " + yytext());
