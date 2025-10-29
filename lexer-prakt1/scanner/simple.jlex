@@ -280,7 +280,7 @@ ILLEGAL_STRING_CHAR = [#&\^]
 
 <YYINITIAL>{ASSIGN} {
 	System.out.println("Found an assignment operator");
-	Symbol assign = new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num));
+	Symbol assign = new Symbol(sym.ID, new TokenVal(yyline+1, CharNum.num));
 	CharNum.num += yytext().length();
 	return assign;
 }

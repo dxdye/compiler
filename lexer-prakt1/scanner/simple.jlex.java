@@ -930,7 +930,7 @@ class Yylex implements java_cup.runtime.Scanner {
           case 34: break;
           case 8: 
             { System.out.println("Found an assignment operator");
-	Symbol assign = new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num));
+	Symbol assign = new Symbol(sym.ID, new TokenVal(yyline+1, CharNum.num));
 	CharNum.num += yytext().length();
 	return assign;
             } 
