@@ -12,6 +12,8 @@ do case default switch and && /* my comment -
 why is my comment "eating" my string!! */
 
 // my comment
+/// should be another valid comment
+/// should be another valid comment //
 
 myVal = "Hello, World! \n Dude!" 
 myVal2 = "Why not work? ahhhh"
