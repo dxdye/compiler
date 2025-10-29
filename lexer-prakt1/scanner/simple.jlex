@@ -56,20 +56,42 @@ class CharNum {
 %state STRING_ESCAPE
 
 DIGIT=		[0-9]
-WHITESPACE=	[\ \t\n]
+WHITESPACE=	[\ \t\n\r]
 space= [\t\r\f\n\ ]
-SEMICOLON = ";"
 IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
-INTNUMBER = [-|+]?(0|[1-9][0-9]*)
+NUMBER = [-|+]?(0|[1-9][0-9]*)
 
 OPENBRACKET = "\("
 CLOSEDBRACKET = "\)"
 OPENCURLY = "\{"
 CLOSECURLY = "\}"
-OPENRECT = "\["
-CLOSERECT = "\]"
+BRACKETS = {OPENBRACKET} | {CLOSEDBRACKET} | {OPENCURLY} | {CLOSECURLY}
 
-REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" | "\<" | "\>" | "\<=" | "\>=" | "==" | "!=" | "\|\|" | "\|"
+REMAINING_KEYWORDS = "return" | "System.out.println"
+
+ARITHMETICOPS = "\+" | "\-" | "\*" | "\/" | "\%"
+RELATIONALOPS = "\<" | "\>" | "\<=" | "\>=" | "==" | "!="
+LOGICALOPS = "\&\&" | "\|\|" | "!"
+
+COMMA = ","
+SEMICOLON = ";"
+ASSIGN = "="
+
+FLOW_KEYWORDS = "if" | "else" | "while" | "do"  | "switch" | "case" | "default"
+SCOPEOPS = "public" | "static"
+
+TYPES = "int" | "boolean" | "String" | "class" | "void"
+
+
+ILLEGAL_STRING_CHAR = [#&\^]
+
+//Rules: 
+// no . allowed
+// no exponents allowed
+// no single & allowed
+// no single quote strings are allowed 
+// no leading zeros are allowed (except for 0 itself) (INTLITERAL)
+
 
 // The next 3 lines are included so that we can use the generated scanner
 // with java CUP (the Java parser generator)
@@ -97,7 +119,242 @@ REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" 
 /*Lexical Rules*/
 %%
 
-/* Rules for STRING state */
+
+/* Rules for ARITHMETICOPS */
+<YYINITIAL> {ARITHMETICOPS} {
+	Symbol AOpsSymbol = null;
+	switch (yytext()) {
+		case "+":
+			System.out.println("Found a plus operator");
+			AOpsSymbol = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return AOpsSymbol;
+		case "-":
+			System.out.println("Found a minus operator");
+			AOpsSymbol = new Symbol(sym.MINUS, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return AOpsSymbol;
+		case "*":
+			System.out.println("Found a multiplication operator");
+			AOpsSymbol = new Symbol(sym.TIMES, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return AOpsSymbol;
+		case "/":
+			System.out.println("Found a division operator");
+			AOpsSymbol = new Symbol(sym.DIVIDE, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return AOpsSymbol;
+			
+		default:
+			//shouldn't be reached
+			break;
+	}
+}
+
+/* Rules for RELATIONALOPS */
+<YYINITIAL> {RELATIONALOPS} {
+	Symbol ROpsSymbol = null;
+	switch (yytext()) {
+		case "<":
+			System.out.println("Found a less-than operator");
+			ROpsSymbol = new Symbol(sym.LESS, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ROpsSymbol;
+		case ">":
+			System.out.println("Found a greater-than operator");
+			ROpsSymbol = new Symbol(sym.GREATER, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ROpsSymbol;
+		case "<=":
+			System.out.println("Found a less-than-or-equal operator");
+			ROpsSymbol = new Symbol(sym.LESSEQ, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ROpsSymbol;
+		case ">=":
+			System.out.println("Found a greater-than-or-equal operator");
+			ROpsSymbol = new Symbol(sym.GREATEREQ, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ROpsSymbol;
+		case "==":
+			System.out.println("Found an equality operator");
+			ROpsSymbol = new Symbol(sym.EQUALS, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ROpsSymbol;
+		case "!=":
+			System.out.println("Found a not-equal operator");
+			ROpsSymbol = new Symbol(sym.NOTEQUALS, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ROpsSymbol;
+			
+		default:
+			//shouldn't be reached
+			break;
+	}
+}
+
+/* Rules for LOGICALOPS */
+<YYINITIAL> {LOGICALOPS} {
+	Symbol LOpsSymbol = null;
+	switch (yytext()) {
+		case "&&":
+			System.out.println("Found a logical AND operator");
+			LOpsSymbol = new Symbol(sym.AND, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return LOpsSymbol;
+		case "||":
+			System.out.println("Found a logical OR operator");
+			LOpsSymbol = new Symbol(sym.OR, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return LOpsSymbol;
+		case "!":
+			System.out.println("Found a logical NOT operator");
+			LOpsSymbol = new Symbol(sym.NOT, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return LOpsSymbol;
+			
+		default:
+			//shouldn't be reached
+			break;
+	}
+}
+
+/* Rules for FLOW_KEYWORDS */
+<YYINITIAL>{FLOW_KEYWORDS} {
+	Symbol FlowKeyWordSymbol = null;
+  switch (yytext()) {
+		case "if":
+				System.out.println("Found an if");
+				FlowKeyWordSymbol = new Symbol(sym.IF, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		case "else":
+				System.out.println("Found an else");
+				FlowKeyWordSymbol = new Symbol(sym.ELSE, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		case "while":
+				System.out.println("Found a while");
+				FlowKeyWordSymbol = new Symbol(sym.WHILE, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		case "do":
+				System.out.println("Found a do");
+				FlowKeyWordSymbol = new Symbol(sym.DO, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		case "switch":
+				System.out.println("Found a switch");
+				FlowKeyWordSymbol = new Symbol(sym.SWITCH, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		case "case":
+				System.out.println("Found a case");
+				FlowKeyWordSymbol = new Symbol(sym.CASE, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		case "default":
+				System.out.println("Found a default");
+				FlowKeyWordSymbol = new Symbol(sym.DEFAULT, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return FlowKeyWordSymbol;
+		default:
+				// should not be reached
+				break;
+	}
+}
+
+/* Rules for remaining keywords in YYINITIAL state */
+<YYINITIAL>{SEMICOLON} {
+	System.out.println("Found a semicolon");
+	Symbol semicolon = new Symbol(sym.SEMICOLON, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return semicolon;
+}
+
+<YYINITIAL>{COMMA} {
+	System.out.println("Found a comma");
+	Symbol comma = new Symbol(sym.COMMA, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return comma;
+}
+
+<YYINITIAL>{ASSIGN} {
+	System.out.println("Found an assignment operator");
+	Symbol assign = new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return assign;
+}
+
+<YYINITIAL> "return" {
+	System.out.println("Found a return");
+	Symbol S = new Symbol(sym.RETURN, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return S;
+}
+
+<YYINITIAL> "System.out.println" {
+	System.out.println("Found a println");
+	Symbol S = new Symbol(sym.PRINT, new TokenVal(yyline+1, CharNum.num));
+	CharNum.num += yytext().length();
+	return S;
+}
+
+<YYINITIAL> {TYPES} {
+	Symbol TypeSymbol = null;
+	switch(yytext()) {
+		case "int":
+				System.out.println("Found type int");
+				TypeSymbol = new Symbol(sym.INT, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return TypeSymbol;
+		case "boolean":
+				System.out.println("Found type boolean");
+				TypeSymbol = new Symbol(sym.BOOLEAN, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return TypeSymbol;
+		case "String":
+				System.out.println("Found type String");
+				TypeSymbol = new Symbol(sym.STRING, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return TypeSymbol;
+		case "class":
+				System.out.println("Found class keyword");
+				TypeSymbol = new Symbol(sym.CLASS, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return TypeSymbol;
+		case "void":
+				System.out.println("Found void keyword");
+				TypeSymbol = new Symbol(sym.VOID, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return TypeSymbol;
+		default:
+				// should not be reached
+				break;
+	}
+}
+
+/* Rules for IDENTIFIER */
+<YYINITIAL>{IDENTIFIER} {
+										System.out.println("Found identifier named: " + yytext());
+										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
+										CharNum.num += yytext().length();
+										return S;
+
+}
+
+/* Rules for Literals */
+{NUMBER} {// NOTE: the following computation of the integer value does NOT
+	    //       check for overflow.  This must be changed.
+			System.out.println("Found an integer literal: " + yytext());	
+	    long val = Long.parseLong(yytext());
+	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, (int) val));
+	    CharNum.num += yytext().length();
+	    return S;
+	   }
+
+
+
+/* Rules for STRING literal */
 <YYINITIAL>"\"" {
     System.out.println("Start of a parsing string literal..");
 		stringBuffers.add(new StringBuilder()); 
@@ -109,36 +366,7 @@ REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" 
 		CharNum.num += yytext().length();
 		return S;
 }
-<YYINITIAL>{REMAININGSYMBOLS} {
-										System.out.println("Found symbol: " + yytext());
-										switch ( yytext() ) {
-											case ",":
-												Symbol S_comma = new Symbol(sym.COMMA, new TokenVal(yyline+1, CharNum.num));
-												CharNum.num += yytext().length();
-												return S_comma;
-											case "+":
-												Symbol S_plus = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
-												CharNum.num += yytext().length();
-												return S_plus;
-											case ":":
-												Symbol S_colon = new Symbol(sym.COLON, new TokenVal(yyline+1, CharNum.num));
-												CharNum.num += yytext().length();
-												return S_colon;
-											case "!":
-												Symbol S_exclaim = new Symbol(sym.NOT, new TokenVal(yyline+1, CharNum.num));
-												CharNum.num += yytext().length();
-												return S_exclaim;
-											case "~":
-												Symbol S_tilde = new Symbol(sym.TILDE, new TokenVal(yyline+1, CharNum.num));
-												CharNum.num += yytext().length();
-												return S_tilde;
-											default:
-												//shouldn't be reached
-												break;
-										}
-										CharNum.num += yytext().length();
-										return S;
-	   }
+
 
 <STRING>"\"" {
     System.out.println("Resulting string literal: " + stringBuffers.get(stringBuffers.size() - 1).toString());
@@ -147,7 +375,7 @@ REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" 
 		CharNum.num += yytext().length();
     return S;
 }
-<STRING># {
+<STRING>{ILLEGAL_STRING_CHAR} {
 	//error illegal character in string
 		Errors.fatal(yyline+1, CharNum.num,
 					"illegal character in string: " + yytext());
@@ -193,110 +421,7 @@ REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" 
 		yybegin(YYINITIAL); // Return to the initial state
 }
 
-
-
-/* Rules for YYINITIAL state */
-{SEMICOLON} {
-										System.out.println("Found a semicolon");
-										Symbol S = new Symbol(sym.SEMICOLON, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-
-
-
-"+"	 {
-					Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
-	    		CharNum.num++;
-	    		return S;
-	   }
-
-"-" {
-					Symbol S = new Symbol(sym.MINUS, new TokenVal(yyline+1, CharNum.num));
-	    		CharNum.num++;
-	    		return S;
-	   }
-
-"System.out.println" {
-										System.out.println("Found a println");
-										Symbol S = new Symbol(sym.SYSTEMOUTPRINTLN, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-"int" {
-										System.out.println("Found an int");
-										Symbol S = new Symbol(sym.INT, new TokenVal(yyline+1, CharNum.num)); //int type is actually long
-										CharNum.num += yytext().length();
-										return S;
-	   }
-
-
-"do" {
-										System.out.println("Found a do");
-										Symbol S = new Symbol(sym.DO, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-"case" {
-										System.out.println("Found a case");
-										Symbol S = new Symbol(sym.CASE, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-"default" {
-										System.out.println("Found a default");
-										Symbol S = new Symbol(sym.DEFAULT, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-"&&" {
-										System.out.println("Found a &&");
-										Symbol S = new Symbol(sym.AND, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-"switch" {
-										System.out.println("Found a switch");
-										Symbol S = new Symbol(sym.SWITCH, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-
-"and" {
-										System.out.println("Found an and");
-										Symbol S = new Symbol(sym.AND, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-	   }
-"=" {
-										System.out.println("Found an assignment operator");
-										Symbol S = new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num));
-										CharNum.num += yytext().length();
-										return S;
-}
-
-
-{WHITESPACE}+  {CharNum.num += yytext().length();}
-
-{INTNUMBER} {// NOTE: the following computation of the integer value does NOT
-	    //       check for overflow.  This must be changed.
-			System.out.println("Found an integer literal: " + yytext());	
-	    long val = Long.parseLong(yytext());
-	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, (int) val));
-	    CharNum.num += yytext().length();
-	    return S;
-	   }
-
-
-
-<YYINITIAL>{IDENTIFIER} {
-										System.out.println("Found identifier named: " + yytext());
-										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
-										CharNum.num += yytext().length();
-										return S;
-
-}
-
+	    
 
 /* Rules for  BLOCKCOMMENT state (Block Comment) */
 <YYINITIAL>"/*" {
@@ -321,12 +446,12 @@ REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" 
 		yybegin(YYINITIAL); // Return to the initial state
 }   
 
-/* rules for  SLCOMMENT state (single line comment) */
+/* rules for Single Line Comment */
+
 <YYINITIAL>"//" {
 			yybegin( SLCOMMENT);
 			CharNum.num += 2;
 }
-
 
 <SLCOMMENT> \n {
 				System.out.println("End of single-line comment"); //can't figure out why not working!!!!1 is test.sim corrupted??
@@ -335,20 +460,22 @@ REMAININGSYMBOLS = "\," | "\." | "\:" | "\!" | "\~" | "\*" | "\/" | "\%" | "\^" 
 				yybegin(YYINITIAL);
 }	
 
-
-
-<SLCOMMENT>.|[\r\t\n] {
-				System.out.println("Matched character in comment: " + yytext()); 
-				CharNum.num += yytext().length(); // Consume charcters in single-line comment
+<SLCOMMENT>. {
+		System.out.println("Matched character in comment: " + yytext()); 
+		CharNum.num += yytext().length(); // Consume charcters in single-line comment
 }
 
 <SLCOMMENT><<EOF>> {
 		Errors.fatal(yyline+1, CharNum.num,"Unterminated single line comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
 }
-	    
-.	{
+
+/* remaining rules for YYINITIAL state */
+<YYINITIAL> {WHITESPACE}+  {CharNum.num += yytext().length();}
+
+<YYINITIAL> .	{
 	Errors.fatal(yyline+1, CharNum.num, "ignoring illegal character: " + yytext());
 	CharNum.num++;
 }
+
 
