@@ -43,7 +43,7 @@ terminal TokenVal       PRINT;
 terminal TokenVal       RETURN;
 terminal IdTokenVal     ID;
 terminal IntLitTokenVal INTLITERAL;
-terminal StringTokenVal STRINGLITERAL;
+terminal StringTokenVal STRINGLITERAL; // changed to StringTokenVal
 terminal TokenVal       LCURLY;
 terminal TokenVal       RCURLY;
 terminal TokenVal       LPAREN;
@@ -119,7 +119,9 @@ type		::= INT
 		:}
 		;
 
-id              ::= ID:i
+id ::= ID:i
 		{: RESULT = new IdNode(i.linenum, i.charnum, i.idVal);
 		:}
 		;
+
+

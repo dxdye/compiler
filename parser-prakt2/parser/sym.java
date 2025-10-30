@@ -30,6 +30,9 @@ public class sym {
   public static final int ELSE = 12;
   public static final int WHILE = 13;
   public static final int DO = 14;
+  public static final int SWITCH = 40;
+  public static final int CASE = 41;
+  public static final int DEFAULT = 42;
 
   // print
   public static final int PRINT = 15;
@@ -111,7 +114,10 @@ public class sym {
   "LESS",
   "GREATER",
   "LESSEQ",
-  "GREATEREQ"
+  "GREATEREQ",
+  "SWITCH",
+  "CASE",
+  "DEFAULT"
   };
 }
 
