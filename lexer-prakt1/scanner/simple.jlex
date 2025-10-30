@@ -515,5 +515,8 @@ ILLEGAL_STRING_CHAR = [#&\^]
 	Errors.fatal(yyline+1, CharNum.num, "ignoring illegal character: " + yytext());
 	CharNum.num++;
 }
+<YYINITIAL><<EOF>> {
+	return new Symbol(sym.EOF); 
+}
 
 

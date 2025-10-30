@@ -780,16 +780,20 @@ class Yylex implements java_cup.runtime.Scanner {
       if (zzInput == YYEOF && zzStartRead == zzCurrentPos) {
         zzAtEOF = true;
             switch (zzLexicalState) {
+            case YYINITIAL: {
+              return new Symbol(sym.EOF);
+            }  // fall though
+            case 106: break;
             case BLOCKCOMMENT: {
               Errors.fatal(yyline+1, CharNum.num,"Unterminated comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
             }  // fall though
-            case 106: break;
+            case 107: break;
             case SLCOMMENT: {
               Errors.fatal(yyline+1, CharNum.num,"Unterminated single line comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
             }  // fall though
-            case 107: break;
+            case 108: break;
             case STRING: {
               System.out.println("Unterminated string literal at EOF");
 		System.out.println("Read until EOF: " + stringBuffers.get(stringBuffers.size() - 1).toString());
@@ -797,7 +801,7 @@ class Yylex implements java_cup.runtime.Scanner {
 					"Unterminated string literal at EOF");
 		yybegin(YYINITIAL); // Return to the initial state
             }  // fall though
-            case 108: break;
+            case 109: break;
             default:
           { 						return new Symbol(sym.EOF); 
  }

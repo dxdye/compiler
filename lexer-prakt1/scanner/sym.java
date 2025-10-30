@@ -56,7 +56,6 @@ public class sym {
 
   // literals
   public static final int INTLITERAL = 17;
-
   public static final int STRINGLITERAL = 18;
 
   // types
