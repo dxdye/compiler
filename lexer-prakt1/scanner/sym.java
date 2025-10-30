@@ -8,7 +8,7 @@
 public class sym {
 
   // assignment operator
-  public static final int ID = 16;
+  public static final int ASSIGN = 16;
 
   // arithmetic operators
   public static final int PLUS = 26;
@@ -51,7 +51,7 @@ public class sym {
   // print
   public static final int PRINT = 14;
 
-  public static final int IDENTIFIER = 40;
+  public static final int ID = 40;
 
   // literals
   public static final int INTLITERAL = 17;

@@ -21,6 +21,16 @@ class TokenVal {
     }
 }
 
+class IdTokenVal extends TokenVal {
+ // new field: the name of the identifier
+		String idName;
+ // constructor
+		IdTokenVal(int l, int c, String name) {
+				super(l,c);
+				idName = name;
+		}
+}
+
 class IntLitTokenVal extends TokenVal {
  // new field: the value of the integer literal
     int intVal;
@@ -54,7 +64,7 @@ class CharNum {
 %state YYINITIAL
 %state STRING_ESCAPE
 
-DIGIT=		[0-9]
+DIGIT=[0-9]
 WHITESPACE=	[\ \t\n\r]
 space= [\t\r\f\n\ ]
 IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
@@ -365,7 +375,7 @@ ILLEGAL_STRING_CHAR = [#&\^]
 /* Rules for IDENTIFIER */
 <YYINITIAL>{IDENTIFIER} {
 										System.out.println("Found identifier named: " + yytext());
-										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
+										Symbol S = new Symbol(sym.IDENTIFIER, new IdTokenVal(yyline+1, CharNum.num, yytext())); //Symbol is not the right type
 										CharNum.num += yytext().length();
 										return S;
 

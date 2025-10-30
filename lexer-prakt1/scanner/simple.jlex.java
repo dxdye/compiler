@@ -23,6 +23,15 @@ class TokenVal {
 				charnum = c;
     }
 }
+class IdTokenVal extends TokenVal {
+	  // new field: the name of the identifier
+		String idName;
+ 		// constructor
+		IdTokenVal(int l, int c, String name) {
+				super(l,c);
+				idName = name;
+		}
+}
 
 class IntLitTokenVal extends TokenVal {
  // new field: the value of the integer literal
@@ -820,9 +829,9 @@ class Yylex implements java_cup.runtime.Scanner {
           case 30: break;
           case 4: 
             { System.out.println("Found identifier named: " + yytext());
-										Symbol S = new Symbol(sym.IDENTIFIER, new TokenVal(yyline+1, CharNum.num)); //Symbol is not the right type
-										CharNum.num += yytext().length();
-										return S;
+	Symbol S = new Symbol(sym.ID, new IdTokenVal(yyline+1, CharNum.num, yytext()));
+	CharNum.num += yytext().length();
+	return S;
             } 
             // fall through
           case 31: break;
@@ -930,7 +939,7 @@ class Yylex implements java_cup.runtime.Scanner {
           case 34: break;
           case 8: 
             { System.out.println("Found an assignment operator");
-	Symbol assign = new Symbol(sym.ID, new TokenVal(yyline+1, CharNum.num));
+	Symbol assign = new Symbol(sym.ASSIGN, new TokenVal(yyline+1, CharNum.num));
 	CharNum.num += yytext().length();
 	return assign;
             } 
