@@ -51,6 +51,7 @@ public class sym {
   // print
   public static final int PRINT = 14;
 
+  // identifiers
   public static final int ID = 40;
 
   // literals
