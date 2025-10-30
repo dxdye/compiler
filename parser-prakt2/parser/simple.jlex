@@ -225,6 +225,26 @@ ILLEGAL_STRING_CHAR = [#&\^]
 			break;
 	}
 }
+/* Rules for SCOPEOPS */
+<YYINITIAL> {SCOPEOPS} {
+	Symbol ScopeOpSymbol = null;
+	switch (yytext()) {
+		case "public":
+			System.out.println("Found public scope operator");
+			ScopeOpSymbol = new Symbol(sym.PUBLIC, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ScopeOpSymbol;
+		case "static":
+			System.out.println("Found static scope operator");
+			ScopeOpSymbol = new Symbol(sym.STATIC, new TokenVal(yyline+1, CharNum.num));
+			CharNum.num += yytext().length();
+			return ScopeOpSymbol;
+			
+		default:
+			//shouldn't be reached
+			break;
+	}
+}
 
 /* Rules for FLOW_KEYWORDS */
 <YYINITIAL>{FLOW_KEYWORDS} {
@@ -514,8 +534,6 @@ ILLEGAL_STRING_CHAR = [#&\^]
 	Errors.fatal(yyline+1, CharNum.num, "ignoring illegal character: " + yytext());
 	CharNum.num++;
 }
-<YYINITIAL><<EOF>> {
-	return new Symbol(sym.EOF); 
-}
+
 
 

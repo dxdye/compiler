@@ -65,6 +65,10 @@ terminal TokenVal       GREATER;
 terminal TokenVal       LESSEQ;
 terminal TokenVal       GREATEREQ;
 
+terminal TokenVal       SWITCH;
+terminal TokenVal       CASE;
+terminal TokenVal       DEFAULT;
+
 /* Non-terminals
  *
  * NOTE: You will need to add more nonterminals to this list as you
@@ -77,6 +81,8 @@ non terminal DeclNode	      decl;
 non terminal FieldDeclNode    fieldDecl;
 non terminal TypeNode	      type;
 non terminal IdNode	      id;
+
+non terminal expr; 
  
 start with program;
 
