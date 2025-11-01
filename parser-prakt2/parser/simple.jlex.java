@@ -1159,7 +1159,8 @@ class Yylex implements java_cup.runtime.Scanner {
 				return TypeSymbol;
 		case "void":
 				System.out.println("Found void keyword");
-				TypeSymbol = new Symbol(sym.VOID, new TokenVal(yyline+1, CharNum.num));
+				//TypeSymbol = new Symbol(sym.VOID, new TokenVal(yyline+1, CharNum.num));
+				TypeSymbol = new Symbol(sym.VOID, new VoidNode());
 				CharNum.num += yytext().length();
 				return TypeSymbol;
 		default:

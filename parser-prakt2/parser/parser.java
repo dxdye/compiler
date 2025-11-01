@@ -187,14 +187,14 @@ public class parser extends java_cup.runtime.lr_parser {
         int column = 0;
         StringBuilder m = new StringBuilder("");
         if (info instanceof java_cup.runtime.Symbol) {
-            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
-            String tokenName = sym.terminalNames[s.sym];
-            // Special case EOF token program
-            if (s.sym != sym.EOF) {
-            line = ((TokenVal) s.value).linenum;
-            column = ((TokenVal) s.value).charnum;
-            }
-            m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
+							java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+							String tokenName = sym.terminalNames[s.sym];
+							// Special case EOF token program
+							if (s.sym != sym.EOF) {
+							line = ((TokenVal) s.value).linenum;
+							column = ((TokenVal) s.value).charnum;
+        }
+        m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
         }
         Errors.fatal(line, column, m.toString());
     }
@@ -260,7 +260,7 @@ class CUP$parser$actions {
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Sequence e = (Sequence)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = new ClassBodyNode(e); 
+		 RESULT = new ClassBodyNode(new DeclListNode(e)); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("classBody",1, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -275,7 +275,11 @@ class CUP$parser$actions {
 		int bleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		DeclNode b = (DeclNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		 
+			System.out.println("Adding declaration to declList is actually " + a);
+			a.addToEnd(b);
+			RESULT = a;
+		
               CUP$parser$result = parser.getSymbolFactory().newSymbol("declList",2, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -284,7 +288,7 @@ class CUP$parser$actions {
           case 4: // declList ::= 
             {
               Sequence RESULT =null;
-
+		 RESULT = new Sequence(); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("declList",2, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -317,7 +321,7 @@ class CUP$parser$actions {
 		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		IdNode e1 = (IdNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-		 RESULT = new FieldDeclNode(e0, e1 ); 
+		 RESULT = new FieldDeclNode((TypeNode) e0, (IdNode) e1); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("fieldDecl",4, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -347,7 +351,19 @@ class CUP$parser$actions {
           case 9: // methodDecl ::= PUBLIC STATIC INT id formals methodBody 
             {
               MethodDeclNode RESULT =null;
-
+		int aleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).left;
+		int aright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).right;
+		IntNode a = (IntNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
+		int bleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
+		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
+		IdNode b = (IdNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
+		int cleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int cright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		FormalsListNode c = (FormalsListNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int dleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
+		int dright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
+		MethodBodyNode d = (MethodBodyNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		 RESULT = new MethodDeclNode(a, b, c, d); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("methodDecl",8, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-5)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -383,7 +399,13 @@ class CUP$parser$actions {
           case 13: // formalsList ::= formalDecl COMMA formalsList 
             {
               Object RESULT =null;
-
+		int e0left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
+		int e0right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
+		FormalDeclNode e0 = (FormalDeclNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
+		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
+		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
+		Object e1 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		 System.out.println(e1.getClass().getName()); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("formalsList",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -392,7 +414,13 @@ class CUP$parser$actions {
           case 14: // formalDecl ::= type id 
             {
               FormalDeclNode RESULT =null;
-
+		int e0left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int e0right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		TypeNode e0 = (TypeNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
+		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
+		IdNode e1 = (IdNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		 RESULT = new FormalDeclNode(e0, e1 ); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("formalDecl",10, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -419,7 +447,7 @@ class CUP$parser$actions {
           case 17: // varDeclList ::= 
             {
               Sequence RESULT =null;
-
+		 RESULT = new Sequence(); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("varDeclList",12, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -452,7 +480,7 @@ class CUP$parser$actions {
           case 20: // stmtList ::= 
             {
               Sequence RESULT =null;
-
+		 RESULT = new Sequence(); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("stmtList",14, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -470,7 +498,7 @@ class CUP$parser$actions {
           case 22: // switchGroupList ::= 
             {
               Object RESULT =null;
-
+		 RESULT = new Sequence(); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("switchGroupList",16, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -521,7 +549,13 @@ class CUP$parser$actions {
           case 27: // stmt ::= IF LPAREN exp RPAREN LCURLY stmtList RCURLY 
             {
               Object RESULT =null;
-
+		int aleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)).left;
+		int aright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)).right;
+		ExpNode a = (ExpNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-4)).value;
+		int bleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Sequence b = (Sequence)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		 RESULT = new IfStmtNode(a, new StmtListNode(b)); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("stmt",7, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -530,7 +564,16 @@ class CUP$parser$actions {
           case 28: // stmt ::= IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY 
             {
               Object RESULT =null;
-
+		int aleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-8)).left;
+		int aright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-8)).right;
+		ExpNode a = (ExpNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-8)).value;
+		int bleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-5)).left;
+		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-5)).right;
+		Sequence b = (Sequence)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-5)).value;
+		int cleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int cright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Sequence c = (Sequence)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		 RESULT = new IfElseStmtNode(a, new StmtListNode(b), new StmtListNode(c)); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("stmt",7, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-10)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;

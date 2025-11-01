@@ -10,14 +10,14 @@ parser code {:
         int column = 0;
         StringBuilder m = new StringBuilder("");
         if (info instanceof java_cup.runtime.Symbol) {
-            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
-            String tokenName = sym.terminalNames[s.sym];
-            // Special case EOF token program
-            if (s.sym != sym.EOF) {
-            line = ((TokenVal) s.value).linenum;
-            column = ((TokenVal) s.value).charnum;
-            }
-            m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
+							java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+							String tokenName = sym.terminalNames[s.sym];
+							// Special case EOF token program
+							if (s.sym != sym.EOF) {
+							line = ((TokenVal) s.value).linenum;
+							column = ((TokenVal) s.value).charnum;
+        }
+        m.append(" : " + message + " - Token: " + tokenName + " value " + s.value);
         }
         Errors.fatal(line, column, m.toString());
     }
@@ -35,9 +35,9 @@ terminal StringNode STRING;
 terminal VoidNode VOID; // VoidNode was added.. try to comprehend why it did not exist..
 terminal TRUE;
 terminal FALSE;
-terminal IF;
-terminal ELSE;
-terminal WHILE;
+terminal IfStmtNode IF;
+terminal IfElseStmtNode ELSE;
+terminal WhileStmtNode WHILE;
 terminal DO;
 terminal PRINT;
 terminal RETURN;
@@ -115,11 +115,17 @@ program		::= PUBLIC CLASS id:a LCURLY classBody:b RCURLY
 		;
 
 classBody	::= declList:e
-		{: RESULT = new ClassBodyNode(e); :}
+		{: RESULT = new ClassBodyNode(new DeclListNode(e)); :}
 		;
 
 declList 	::= declList:a decl:b
+		{: 
+			System.out.println("Adding declaration to declList is actually " + a);
+			a.addToEnd(b);
+			RESULT = a;
+		:}
 		| /* epsilon */
+		{: RESULT = new Sequence(); :}
 		;
 
 decl	::= fieldDecl
@@ -127,12 +133,13 @@ decl	::= fieldDecl
 		;
 
 fieldDecl	::= STATIC type:e0 id:e1 SEMICOLON
-		{: RESULT = new FieldDeclNode(e0, e1 ); :}
+		{: RESULT = new FieldDeclNode((TypeNode) e0, (IdNode) e1); :}
 		;
 
 methodDecl	::= PUBLIC STATIC VOID:a id:b formals:c methodBody:d // no return value
 								{: RESULT = new MethodDeclNode(a, b, c, d); :}
-                | PUBLIC STATIC INT id formals methodBody // int return value allowed
+                | PUBLIC STATIC INT:a id:b formals:c  methodBody:d // int return value allowed
+								{: RESULT = new MethodDeclNode(a, b, c, d); :}
 	        ;						
 
 formals		::= LPAREN RPAREN
@@ -140,7 +147,8 @@ formals		::= LPAREN RPAREN
 		;
 
 formalsList	::= formalDecl
-		| formalDecl COMMA formalsList
+		| formalDecl:e0 COMMA formalsList:e1
+		{: System.out.println(e1.getClass().getName()); :}
 		;
 
 formalDecl	::= type:e0 id:e1
@@ -152,6 +160,7 @@ methodBody	::= LCURLY varDeclList stmtList RCURLY
 
 varDeclList	::= varDeclList varDecl
 		| /* epsilon */
+		{: RESULT = new Sequence(); :}
 		;
 
 varDecl		::= type:e0 id:e1 SEMICOLON
@@ -160,6 +169,7 @@ varDecl		::= type:e0 id:e1 SEMICOLON
 
 stmtList	::= stmtList stmt
 		| /* epsilon */
+		{: RESULT = new Sequence(); :}
 		;
 
 
@@ -167,6 +177,7 @@ stmtList	::= stmtList stmt
 
 switchGroupList   ::= switchGroupList switchGroup
 		| /* epsilon */
+		{: RESULT = new Sequence(); :}
 		;
 
 switchGroup	::=   switchLabel stmtList
@@ -178,8 +189,10 @@ switchLabel	::=   CASE exp COMMA
 		     
 stmt		::= id:e0 ASSIGN exp:e1 SEMICOLON 
 					{: RESULT = new AssignStmtNode(e0, e1); :}
-	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY
-	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY
+	        | IF LPAREN exp:a RPAREN LCURLY stmtList:b RCURLY
+					{: RESULT = new IfStmtNode(a, new StmtListNode(b)); :}
+	        | IF LPAREN exp:a RPAREN LCURLY stmtList:b RCURLY ELSE LCURLY stmtList:c RCURLY
+					{: RESULT = new IfElseStmtNode(a, new StmtListNode(b), new StmtListNode(c)); :}
 					| PRINT LPAREN exp:e1 RPAREN SEMICOLON 
 					{: RESULT = new PrintStmtNode(e1); :}
 					;

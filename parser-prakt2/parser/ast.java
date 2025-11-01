@@ -117,6 +117,7 @@ class ProgramNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        System.out.println("ProgramNode write");
         p.print("public class ");
         myId.decompile(p, 0);
         p.println(" {");
@@ -315,6 +316,7 @@ class BooleanNode extends TypeNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.print("boolean");
     }
 }
 
@@ -323,6 +325,7 @@ class StringNode extends TypeNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.print("String");
     }
 }
 
