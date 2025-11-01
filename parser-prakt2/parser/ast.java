@@ -159,7 +159,7 @@ class DeclListNode extends ASTnode {
     }
 
     // sequence of kids (DeclNodes)
-    private Sequence myDecls;
+    public Sequence myDecls;
 }
 
 class FormalsListNode extends ASTnode {
@@ -291,6 +291,15 @@ class FormalDeclNode extends DeclNode {
 abstract class TypeNode extends ASTnode {
 }
 
+class VoidNode extends TypeNode {
+    public VoidNode() {
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.print("void");
+    }
+}
+
 class IntNode extends TypeNode {
     public IntNode() {
     }
@@ -299,6 +308,7 @@ class IntNode extends TypeNode {
         p.print("int");
     }
 }
+
 
 class BooleanNode extends TypeNode {
     public BooleanNode() {
@@ -491,7 +501,6 @@ class IdNode extends ExpNode {
         myCharNum = charNum;
         myStrVal = strVal;
     }
-
     public void decompile(PrintWriter p, int indent) {
         p.print(myStrVal);
     }

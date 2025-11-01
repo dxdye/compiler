@@ -29,10 +29,10 @@ parser code {:
 terminal PUBLIC;
 terminal CLASS;
 terminal STATIC;
-terminal INT;
-terminal BOOLEAN;
-terminal STRING;
-terminal VOID;
+terminal IntNode INT;
+terminal BooleanNode BOOLEAN;
+terminal StringNode STRING;
+terminal VoidNode VOID; // VoidNode was added.. try to comprehend why it did not exist..
 terminal TRUE;
 terminal FALSE;
 terminal IF;
@@ -75,7 +75,7 @@ non terminal IdNode	      		id;
 
 non terminal stmt;
 non terminal MethodDeclNode   methodDecl;
-non terminal formals;
+non terminal FormalsListNode  formals;
 non terminal FormalDeclNode   formalDecl;
 non terminal MethodBodyNode   methodBody;
 non terminal Sequence         varDeclList;
@@ -114,21 +114,24 @@ program		::= PUBLIC CLASS id:a LCURLY classBody:b RCURLY
 			{: RESULT = new ProgramNode(a, b); :}
 		;
 
-classBody	::= declList
+classBody	::= declList:e
+		{: RESULT = new ClassBodyNode(e); :}
 		;
 
-declList 	::= declList decl
+declList 	::= declList:a decl:b
 		| /* epsilon */
 		;
 
-decl		::= fieldDecl
+decl	::= fieldDecl
 		| methodDecl
 		;
 
-fieldDecl	::= STATIC type id SEMICOLON
+fieldDecl	::= STATIC type:e0 id:e1 SEMICOLON
+		{: RESULT = new FieldDeclNode(e0, e1 ); :}
 		;
 
-methodDecl	::= PUBLIC STATIC VOID id formals methodBody // no return value
+methodDecl	::= PUBLIC STATIC VOID:a id:b formals:c methodBody:d // no return value
+								{: RESULT = new MethodDeclNode(a, b, c, d); :}
                 | PUBLIC STATIC INT id formals methodBody // int return value allowed
 	        ;						
 
@@ -140,7 +143,8 @@ formalsList	::= formalDecl
 		| formalDecl COMMA formalsList
 		;
 
-formalDecl	::= type id
+formalDecl	::= type:e0 id:e1
+		{: RESULT = new FormalDeclNode(e0, e1 ); :}
 		;
 
 methodBody	::= LCURLY varDeclList stmtList RCURLY 
@@ -173,6 +177,7 @@ switchLabel	::=   CASE exp COMMA
 		;      
 		     
 stmt		::= id:e0 ASSIGN exp:e1 SEMICOLON 
+					{: RESULT = new AssignStmtNode(e0, e1); :}
 	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY
 	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY
 					| PRINT LPAREN exp:e1 RPAREN SEMICOLON 
@@ -180,7 +185,7 @@ stmt		::= id:e0 ASSIGN exp:e1 SEMICOLON
 					;
 
 exp		::= 
-		| id
+		| id:e
 	  | INTLITERAL
 	  | STRINGLITERAL
 	  | TRUE
@@ -198,12 +203,14 @@ actualList	::= exp
 		| actualList COMMA exp
 		;
 
-type		::= INT
-		| BOOLEAN
-		| STRING
+type		::= INT {: RESULT = new IntNode(); :}
+		| BOOLEAN {: RESULT = new BooleanNode(); :}
+		| STRING {: RESULT = new StringNode(); :}
+		| VOID {: RESULT = new VoidNode(); :}
 		;
 
-id  ::= ID
+id  ::= ID:e
+		{: RESULT = new IdNode(e.linenum, e.charnum, e.idVal); :}
 		;
 
 

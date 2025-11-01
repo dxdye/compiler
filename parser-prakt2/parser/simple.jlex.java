@@ -14,8 +14,8 @@ import java.util.LinkedList;
 
 class TokenVal {
  // fields
-    int linenum;
-    int charnum;
+    public int linenum;
+    public int charnum;
  // constructor
     TokenVal(int l, int c) {
         linenum = l;

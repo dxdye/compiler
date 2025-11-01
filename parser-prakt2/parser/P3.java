@@ -52,7 +52,7 @@ public class P3 {
 
 		try {
 			root = P.parse(); // do the parse
-			System.out.println("Root is: " + (root == null ? "null" : root.getClass().getName()));
+			System.out.println("Root is: " + (root == null ? "null" : root.value.getClass().getName()));
 			System.out.println("Simple program parsed correctly.");
 		} catch (Exception ex) {
 			System.out.println(ex);

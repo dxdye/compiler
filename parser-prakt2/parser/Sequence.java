@@ -44,23 +44,22 @@ public class Sequence {
         // fields
         Object data;
         Seqnode next;
-    
+
         // methods
         // 3 constructors
         public Seqnode() {
-    	this(null, null);
+            this(null, null);
         }
-    
+
         public Seqnode(Object d) {
-    	this(d, null);
+            this(d, null);
         }
-    
+
         public Seqnode(Object d, Seqnode n) {
-    	data = d;
-    	next = n;
+            data = d;
+            next = n;
         }
     }
-
 
     // fields of the Sequence class
     private Seqnode header;
@@ -74,71 +73,70 @@ public class Sequence {
     // * constructor
     // ******************
     public Sequence() {
-	header = new Seqnode();
-	last = header;
-	size = 0;
-	current = null;
+        header = new Seqnode();
+        last = header;
+        size = 0;
+        current = null;
     }
 
     // ******************
     // * length
     // ******************
     public int length() {
-	return size;
+        return size;
     }
 
     // ******************
     // * start
     // ******************
     public void start() {
-	current = header.next;
+        current = header.next;
     }
 
     // ******************
     // * getCurrent
     // ******************
     public Object getCurrent() throws NoCurrentException {
-	if (current == null) {
-	    throw new NoCurrentException();
-	}
-	return current.data;
+        if (current == null) {
+            throw new NoCurrentException();
+        }
+        return current.data;
     }
 
     // ******************
     // * advance
     // ******************
     public void advance() throws NoCurrentException {
-	if (current == null) {
-	    throw new NoCurrentException();
-	}
-	else current = current.next;
+        if (current == null) {
+            throw new NoCurrentException();
+        } else
+            current = current.next;
     }
 
     // ******************
     // * addToFront
     // ******************
     public void addToFront(Object ob) {
-	header.next = new Seqnode(ob, header.next);
-	if (last == header) {
-	    last = header.next;
-	}
-	size++;
+        header.next = new Seqnode(ob, header.next);
+        if (last == header) {
+            last = header.next;
+        }
+        size++;
     }
 
     // ******************
     // * addToEnd
     // ******************
     public void addToEnd(Object ob) {
-	last.next = new Seqnode(ob, null);
-	last = last.next;
-	size++;
+        last.next = new Seqnode(ob, null);
+        last = last.next;
+        size++;
     }
 
     // ******************
     // * isCurrent
     // ******************
     public boolean isCurrent() {
-	return(current != null);
+        return (current != null);
     }
 }
-
