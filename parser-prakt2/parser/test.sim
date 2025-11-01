@@ -1,2 +1,8 @@
-public class TestSim  {
+public class Hello {
+  static int x;
+  public static void main() {
+    if (true) {
+      System.out.println("Hello Simple!");
+    }
+  }
 }

@@ -63,9 +63,7 @@ class CharNum {
 %state YYINITIAL
 %state STRING_ESCAPE
 
-DIGIT=		[0-9]
 WHITESPACE=	[\ \t\n\r]
-space= [\t\r\f\n\ ]
 IDENTIFIER = [a-zA-Z_][a-zA-Z0-9_]*
 NUMBER = [-|+]?(0|[1-9][0-9]*)
 
@@ -75,7 +73,10 @@ OPENCURLY = "\{"
 CLOSECURLY = "\}"
 BRACKETS = {OPENBRACKET} | {CLOSEDBRACKET} | {OPENCURLY} | {CLOSECURLY}
 
-REMAINING_KEYWORDS = "return" | "System.out.println"
+//REMAINING_KEYWORDS = "return" | "System.out.println"
+//DIGIT=		[0-9]
+//space= [\t\r\f\n\ ]
+VALUES = "true" | "false"
 
 ARITHMETICOPS = "\+" | "\-" | "\*" | "\/" | "\%"
 RELATIONALOPS = "\<" | "\>" | "\<=" | "\>=" | "==" | "!="
@@ -361,6 +362,26 @@ ILLEGAL_STRING_CHAR = [#&\^]
 	}
 }
 
+/* Rules for VALUES */
+<YYINITIAL>{VALUES} {
+	Symbol ValueSymbol = null;
+	switch(yytext()) {
+		case "true":
+				System.out.println("Found boolean literal true");
+				ValueSymbol = new Symbol(sym.TRUE, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return ValueSymbol;
+		case "false":
+				System.out.println("Found boolean literal false");
+				ValueSymbol = new Symbol(sym.FALSE, new TokenVal(yyline+1, CharNum.num));
+				CharNum.num += yytext().length();
+				return ValueSymbol;
+		default:
+				// should not be reached
+				break;
+	}
+}
+
 /* Rules for BRACKETS */
 <YYINITIAL>{BRACKETS} {
 	Symbol BracketSymbol = null;
@@ -407,7 +428,7 @@ ILLEGAL_STRING_CHAR = [#&\^]
 	    Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline+1, CharNum.num, (int) val));
 	    CharNum.num += yytext().length();
 	    return S;
-	   }
+	}
 
 
 
