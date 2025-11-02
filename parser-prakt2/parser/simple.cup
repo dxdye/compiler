@@ -65,28 +65,31 @@ terminal DEFAULT;
  * NOTE: You will need to add more nonterminals to this list as you
  *       add productions to the grammar below.
  */
+non terminal stmt;
+
 non terminal ProgramNode      program;
 non terminal ClassBodyNode    classBody;
-non terminal Sequence         declList;
 non terminal DeclNode	      	decl;
 non terminal FieldDeclNode    fieldDecl;
 non terminal TypeNode	     		type;
 non terminal IdNode	      		id;
 
-non terminal stmt;
 non terminal MethodDeclNode   methodDecl;
-non terminal FormalsListNode  formals;
 non terminal FormalDeclNode   formalDecl;
 non terminal MethodBodyNode   methodBody;
-non terminal Sequence         varDeclList;
 non terminal VarDeclNode      varDecl;
+
+non terminal Sequence         declList;
+non terminal Sequence         varDeclList;
+non terminal Sequence 				formalsList;
 non terminal Sequence         stmtList;
+
 non terminal actualList;
+non terminal FormalsListNode  formals;
 non terminal switchGroupList;
 non terminal switchGroup;
 non terminal switchLabel;
 non terminal ExpNode          exp;
-non terminal formalsList;
 non terminal AssignStmtNode 	assignment;
 
 
@@ -118,8 +121,9 @@ classBody	::= declList:e
 		{: RESULT = new ClassBodyNode(new DeclListNode(e)); :}
 		;
 
-declList 	::= declList:a decl:b
+declList 	::= 	declList:a decl:b
 		{: 
+			System.out.println("Values of declList: " + a.toString());
 			System.out.println("Adding declaration to declList is actually " + a);
 			a.addToEnd(b);
 			RESULT = a;
@@ -128,8 +132,10 @@ declList 	::= declList:a decl:b
 		{: RESULT = new Sequence(); :}
 		;
 
-decl	::= fieldDecl
-		| methodDecl
+decl	::= fieldDecl:e
+		{: RESULT = e; :}
+		| methodDecl:e
+		{: RESULT = e; :}
 		;
 
 fieldDecl	::= STATIC type:e0 id:e1 SEMICOLON
@@ -143,12 +149,17 @@ methodDecl	::= PUBLIC STATIC VOID:a id:b formals:c methodBody:d // no return val
 	        ;						
 
 formals		::= LPAREN RPAREN
-		| LPAREN formalsList RPAREN
+		| LPAREN formalsList:e1 RPAREN
+		{: RESULT = new FormalsListNode(e1); :}
 		;
 
 formalsList	::= formalDecl
+		{: RESULT = new Sequence(); RESULT.addToEnd(RESULT); :}
 		| formalDecl:e0 COMMA formalsList:e1
-		{: System.out.println(e1.getClass().getName()); :}
+		{: System.out.println(e1.getClass().getName());
+			e1.addToFront(e0); :}
+		| /* epsilon */
+		{: RESULT = new Sequence(); :}
 		;
 
 formalDecl	::= type:e0 id:e1

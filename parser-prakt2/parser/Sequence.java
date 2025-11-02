@@ -139,4 +139,19 @@ public class Sequence {
     public boolean isCurrent() {
         return (current != null);
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        Seqnode temp = header.next;
+        sb.append("[");
+        while (temp != null) {
+            sb.append(temp.data);
+            if (temp.next != null) {
+                sb.append(", ");
+            }
+            temp = temp.next;
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 }
