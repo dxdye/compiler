@@ -33,24 +33,24 @@ terminal IntNode INT;
 terminal BooleanNode BOOLEAN;
 terminal StringNode STRING;
 terminal VoidNode VOID; // VoidNode was added.. try to comprehend why it did not exist..
-terminal TRUE;
-terminal FALSE;
+terminal TokenVal TRUE;
+terminal TokenVal FALSE;
 terminal IfStmtNode IF;
 terminal IfElseStmtNode ELSE;
 terminal WhileStmtNode WHILE;
-terminal DO;
-terminal PRINT;
-terminal RETURN;
+terminal WhileStmtNode DO;
+terminal PrintStmtNode PRINT;
+terminal ReturnStmtNode RETURN;
 terminal IdTokenVal     ID;
 terminal IntLitTokenVal INTLITERAL;
 terminal StringTokenVal STRINGLITERAL; // changed to StringTokenVal
+terminal AssignStmtNode ASSIGN;
 
 
 terminal TokenVal       LCURLY, RCURLY;
 terminal TokenVal       LPAREN, RPAREN;
 
 terminal COMMA;
-terminal TokenVal ASSIGN;
 terminal SEMICOLON;
 terminal PLUS, MINUS, TIMES, DIVIDE;
 terminal NOT, AND, OR;
@@ -90,7 +90,6 @@ non terminal switchGroupList;
 non terminal switchGroup;
 non terminal switchLabel;
 non terminal ExpNode          exp;
-non terminal AssignStmtNode 	assignment;
 
 
 precedence left LPAREN, RPAREN; 
@@ -103,6 +102,7 @@ precedence left TIMES, DIVIDE; // Assoziativität links
 
 precedence right NOT;
 precedence right MINUS; // Unary minus
+
 
  
 start with program;
@@ -174,11 +174,12 @@ varDeclList	::= varDeclList varDecl
 		{: RESULT = new Sequence(); :}
 		;
 
-varDecl		::= type:e0 id:e1 SEMICOLON
+varDecl		::= type:e0 id:e1  SEMICOLON
 		{: RESULT = new VarDeclNode(e0, e1 ); :}
 		;
 
-stmtList	::= stmtList stmt
+stmtList	::= stmtList:e0 stmt:e1
+		{: RESULT = e0; RESULT.addToEnd(e1); :}
 		| /* epsilon */
 		{: RESULT = new Sequence(); :}
 		;
@@ -198,33 +199,70 @@ switchLabel	::=   CASE exp COMMA
 		|     				DEFAULT COMMA
 		;      
 		     
-stmt		::= id:e0 ASSIGN exp:e1 SEMICOLON 
-					{: RESULT = new AssignStmtNode(e0, e1); :}
+stmt		::= 	type:e0 id:e1 ASSIGN exp:e2 SEMICOLON
+					{: RESULT = new AssignStmtNode(e0, e1, e2); :}
 	        | IF LPAREN exp:a RPAREN LCURLY stmtList:b RCURLY
 					{: RESULT = new IfStmtNode(a, new StmtListNode(b)); :}
 	        | IF LPAREN exp:a RPAREN LCURLY stmtList:b RCURLY ELSE LCURLY stmtList:c RCURLY
 					{: RESULT = new IfElseStmtNode(a, new StmtListNode(b), new StmtListNode(c)); :}
 					| PRINT LPAREN exp:e1 RPAREN SEMICOLON 
 					{: RESULT = new PrintStmtNode(e1); :}
+					| id:e LPAREN RPAREN // function call with no args
+					{: RESULT = new CallStmtNode(e, null); :}
+					id:e0 LPAREN actualList:e1 RPAREN // with args 
+					{: RESULT = new CallStmtNode(e0, new ExpListNode( new Sequence() )); :}
 					;
 
-exp		::= 
-		| id:e
-	  | INTLITERAL
-	  | STRINGLITERAL
-	  | TRUE
-	  | FALSE
-	  | LPAREN exp RPAREN
+
+exp		::= id:e
+		{: RESULT = e; :}
+	  | INTLITERAL:e
+		{: RESULT = new IntLitNode(e.linenum, e.charnum, e.intVal); :}
+	  | STRINGLITERAL:e
+		{: RESULT = new StringLitNode(e.linenum, e.charnum, e.str); :}
+	  | TRUE:e
+		{: RESULT = new TrueNode(e.linenum, e.charnum); :}
+	  | FALSE:e
+		{: RESULT = new FalseNode(e.linenum, e.charnum); :}
+	  | LPAREN exp:e RPAREN
+		{: RESULT = e ; :}
+	  | exp:e1 PLUS exp:e2
+		{: RESULT = new PlusNode(e1, e2); :}
+	  | exp:e1 MINUS exp:e2
+		{: RESULT = new MinusNode(e1, e2); :}
+	  | exp:e1 TIMES exp:e2
+		{: RESULT = new TimesNode(e1, e2); :}
+	  | exp:e1 DIVIDE exp:e2
+		{: RESULT = new DivideNode(e1, e2); :}
+	  | NOT exp:e
+		{: RESULT = new NotNode(e); :}
+	  | exp:e1 AND exp:e2
+		{: RESULT = new AndNode(e1, e2); :}
+	  | exp:e1 OR exp:e2
+		{: RESULT = new OrNode(e1, e2); :}
+	  | exp:e1 EQUALS exp:e2
+		{: RESULT = new EqualsNode(e1, e2); :}
+	  | exp:e1 NOTEQUALS exp:e2
+		{: RESULT = new NotEqualsNode(e1, e2); :}
+	  | exp:e1 LESS exp:e2
+		{: RESULT = new LessNode(e1, e2); :}
+	  | exp:e1 GREATER exp:e2
+		{: RESULT = new GreaterNode(e1, e2); :}
+	  | exp:e1 LESSEQ exp:e2
+		{: RESULT = new LessEqNode(e1, e2); :}
+	  | exp:e1 GREATEREQ exp:e2
+		{: RESULT = new GreaterEqNode(e1, e2); :}
+
 		;
 
-functionCall ::= id LPAREN RPAREN // function call with no args
-	  | id LPAREN actualList RPAREN // with args 
-		;
 
 
 
-actualList	::= exp
-		| actualList COMMA exp
+
+actualList	::= exp:e
+		| actualList:e0 COMMA exp:e1
+		| /* epsilon */
+		{: RESULT = new Sequence(); :}
 		;
 
 type		::= INT {: RESULT = new IntNode(); :}

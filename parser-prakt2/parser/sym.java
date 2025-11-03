@@ -10,21 +10,21 @@ public class sym {
   public static final int EQUALS = 34;
   public static final int CASE = 41;
   public static final int GREATER = 37;
-  public static final int LPAREN = 22;
+  public static final int LPAREN = 23;
   public static final int INT = 5;
   public static final int LESS = 36;
   public static final int MINUS = 28;
   public static final int STATIC = 4;
-  public static final int RPAREN = 23;
+  public static final int RPAREN = 24;
   public static final int NOT = 31;
   public static final int SEMICOLON = 26;
   public static final int AND = 32;
   public static final int OR = 33;
-  public static final int COMMA = 24;
+  public static final int COMMA = 25;
   public static final int CLASS = 3;
   public static final int PLUS = 27;
   public static final int LESSEQ = 38;
-  public static final int ASSIGN = 25;
+  public static final int ASSIGN = 20;
   public static final int IF = 11;
   public static final int ID = 17;
   public static final int EOF = 0;
@@ -32,10 +32,10 @@ public class sym {
   public static final int RETURN = 16;
   public static final int TRUE = 9;
   public static final int error = 1;
-  public static final int LCURLY = 20;
+  public static final int LCURLY = 21;
   public static final int VOID = 8;
   public static final int SWITCH = 40;
-  public static final int RCURLY = 21;
+  public static final int RCURLY = 22;
   public static final int INTLITERAL = 18;
   public static final int TIMES = 29;
   public static final int ELSE = 12;
@@ -70,12 +70,12 @@ public class sym {
   "ID",
   "INTLITERAL",
   "STRINGLITERAL",
+  "ASSIGN",
   "LCURLY",
   "RCURLY",
   "LPAREN",
   "RPAREN",
   "COMMA",
-  "ASSIGN",
   "SEMICOLON",
   "PLUS",
   "MINUS",
