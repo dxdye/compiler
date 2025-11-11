@@ -79,29 +79,26 @@ non terminal FormalDeclNode   formalDecl;
 non terminal MethodBodyNode   methodBody;
 non terminal VarDeclNode      varDecl;
 
+non terminal Sequence 				actualList;
 non terminal Sequence         declList;
 non terminal Sequence         varDeclList;
 non terminal Sequence 				formalsList;
 non terminal Sequence         stmtList;
+non terminal Sequence 				switchGroupList;
 
-non terminal actualList;
 non terminal FormalsListNode  formals;
-non terminal switchGroupList;
 non terminal switchGroup;
 non terminal switchLabel;
 non terminal ExpNode          exp;
 
 
-precedence left LPAREN, RPAREN; 
 precedence left OR;
 precedence left AND;
-precedence left EQUALS, NOTEQUALS;
-precedence left LESS, GREATER, LESSEQ, GREATEREQ;
+precedence nonassoc LESS, GREATER, LESSEQ, GREATEREQ, EQUALS, NOTEQUALS;
 precedence left PLUS, MINUS; 
 precedence left TIMES, DIVIDE; // Assoziativität links
 
-precedence right NOT;
-precedence right MINUS; // Unary minus
+precedence right NOT, MINUS; // Unary minus
 
 
  
@@ -148,28 +145,49 @@ methodDecl	::= PUBLIC STATIC VOID:a id:b formals:c methodBody:d // no return val
 								{: RESULT = new MethodDeclNode(a, b, c, d); :}
 	        ;						
 
+
 formals		::= LPAREN RPAREN
-		| LPAREN formalsList:e1 RPAREN
-		{: RESULT = new FormalsListNode(e1); :}
+		{: RESULT = new FormalsListNode(new Sequence()); :}
+		| LPAREN formalsList:fl RPAREN
+		{: RESULT = new FormalsListNode(fl); :}
 		;
 
-formalsList	::= formalDecl
-		{: RESULT = new Sequence(); RESULT.addToEnd(RESULT); :}
+formalsList	::= formalDecl:e0
+		{: 
+			var x = new Sequence();
+			x.addToFront(e0);
+			System.out.println("Create new formalsList RESULT: " + x.toString());
+			RESULT = x;
+		:}
 		| formalDecl:e0 COMMA formalsList:e1
-		{: System.out.println(e1.getClass().getName());
-			e1.addToFront(e0); :}
-		| /* epsilon */
-		{: RESULT = new Sequence(); :}
+		{: 
+			if(e1 == null) {
+				var x = new Sequence();
+				x.addToFront(e0);
+				System.out.println("Create new formalsList RESULT: " + x.toString());
+				RESULT = x;
+			} else
+			{ 
+				e1.addToFront(e0);
+				RESULT = e1;
+			}
+			System.out.println("formalsList RESULT: " + RESULT.toString());
+		
+		:}
 		;
 
 formalDecl	::= type:e0 id:e1
 		{: RESULT = new FormalDeclNode(e0, e1 ); :}
 		;
-
-methodBody	::= LCURLY varDeclList stmtList RCURLY 
+methodBody	::= LCURLY varDeclList:e0 stmtList:e1 RCURLY 
+		{: RESULT = new MethodBodyNode(new DeclListNode(e0), new StmtListNode(e1)); :}
 		;
 
-varDeclList	::= varDeclList varDecl
+varDeclList	::= varDeclList:e0 varDecl:e1
+		{: e0.addToEnd(e1);
+				RESULT = e0;
+		
+		 :}
 		| /* epsilon */
 		{: RESULT = new Sequence(); :}
 		;
@@ -199,22 +217,49 @@ switchLabel	::=   CASE exp COMMA
 		|     				DEFAULT COMMA
 		;      
 		     
-stmt		::= 	type:e0 id:e1 ASSIGN exp:e2 SEMICOLON
-					{: RESULT = new AssignStmtNode(e0, e1, e2); :}
+stmt		::= 	
+					PRINT LPAREN exp:e1 RPAREN SEMICOLON 
+					{: RESULT = new PrintStmtNode(e1); :}
+					
+					| id:e1 ASSIGN exp:e2 SEMICOLON
+					{: RESULT = new AssignStmtNode(e1, e2); :}
+
 	        | IF LPAREN exp:a RPAREN LCURLY stmtList:b RCURLY
 					{: RESULT = new IfStmtNode(a, new StmtListNode(b)); :}
+
 	        | IF LPAREN exp:a RPAREN LCURLY stmtList:b RCURLY ELSE LCURLY stmtList:c RCURLY
 					{: RESULT = new IfElseStmtNode(a, new StmtListNode(b), new StmtListNode(c)); :}
-					| PRINT LPAREN exp:e1 RPAREN SEMICOLON 
-					{: RESULT = new PrintStmtNode(e1); :}
-					| id:e LPAREN RPAREN // function call with no args
-					{: RESULT = new CallStmtNode(e, null); :}
-					id:e0 LPAREN actualList:e1 RPAREN // with args 
-					{: RESULT = new CallStmtNode(e0, new ExpListNode( new Sequence() )); :}
+
+	        | DO LCURLY stmtList:sl RCURLY WHILE LPAREN exp:e RPAREN 
+					{: RESULT = new WhileStmtNode(e, new StmtListNode( sl )); :}	
+
+					| RETURN SEMICOLON
+					| RETURN exp:e0 SEMICOLON // return with a value
+					| id LPAREN RPAREN SEMICOLON  	  // function call with no args
+	        | id LPAREN actualList RPAREN SEMICOLON // with args
+					| LCURLY varDeclList stmtList RCURLY  // nested block
+					{: RESULT = new MethodBodyNode(new DeclListNode(new Sequence()), new StmtListNode(new Sequence())); :}
+					| SWITCH LPAREN exp:ex RPAREN LCURLY switchGroupList:sg RCURLY
+					{: RESULT = new SwitchStmtNode(ex, new SwitchGroupListNode(sg)) ; :}
 					;
 
 
-exp		::= id:e
+exp		::= 
+		exp PLUS exp
+	  | exp MINUS exp
+	  | exp TIMES exp
+	  | exp DIVIDE exp
+	  | NOT exp
+	  | exp AND exp
+	  | exp OR exp
+		| exp EQUALS exp
+		| exp NOTEQUALS exp
+		| exp LESS exp
+		| exp GREATER exp
+		| exp LESSEQ exp
+		| exp GREATEREQ exp
+		| MINUS exp
+		| id:e
 		{: RESULT = e; :}
 	  | INTLITERAL:e
 		{: RESULT = new IntLitNode(e.linenum, e.charnum, e.intVal); :}
@@ -224,45 +269,23 @@ exp		::= id:e
 		{: RESULT = new TrueNode(e.linenum, e.charnum); :}
 	  | FALSE:e
 		{: RESULT = new FalseNode(e.linenum, e.charnum); :}
-	  | LPAREN exp:e RPAREN
-		{: RESULT = e ; :}
-	  | exp:e1 PLUS exp:e2
-		{: RESULT = new PlusNode(e1, e2); :}
-	  | exp:e1 MINUS exp:e2
-		{: RESULT = new MinusNode(e1, e2); :}
-	  | exp:e1 TIMES exp:e2
-		{: RESULT = new TimesNode(e1, e2); :}
-	  | exp:e1 DIVIDE exp:e2
-		{: RESULT = new DivideNode(e1, e2); :}
-	  | NOT exp:e
-		{: RESULT = new NotNode(e); :}
-	  | exp:e1 AND exp:e2
-		{: RESULT = new AndNode(e1, e2); :}
-	  | exp:e1 OR exp:e2
-		{: RESULT = new OrNode(e1, e2); :}
-	  | exp:e1 EQUALS exp:e2
-		{: RESULT = new EqualsNode(e1, e2); :}
-	  | exp:e1 NOTEQUALS exp:e2
-		{: RESULT = new NotEqualsNode(e1, e2); :}
-	  | exp:e1 LESS exp:e2
-		{: RESULT = new LessNode(e1, e2); :}
-	  | exp:e1 GREATER exp:e2
-		{: RESULT = new GreaterNode(e1, e2); :}
-	  | exp:e1 LESSEQ exp:e2
-		{: RESULT = new LessEqNode(e1, e2); :}
-	  | exp:e1 GREATEREQ exp:e2
-		{: RESULT = new GreaterEqNode(e1, e2); :}
+		| LPAREN exp RPAREN
+	 	| id LPAREN RPAREN   	      // function call with no args
+	 	| id LPAREN actualList RPAREN // with args
 
 		;
 
-
-
-
-
-actualList	::= exp:e
+actualList	::= exp:e0
+		{: 
+			var x = new Sequence();
+			x.addToFront(e0);
+			RESULT = x;
+			:}
 		| actualList:e0 COMMA exp:e1
-		| /* epsilon */
-		{: RESULT = new Sequence(); :}
+		{: 
+				e0.addToFront(e1);
+				RESULT = e0;
+		:}
 		;
 
 type		::= INT {: RESULT = new IntNode(); :}

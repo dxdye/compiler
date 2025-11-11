@@ -1,0 +1,5 @@
+public class Hello {
+  static int x;
+  static int g;
+  public static void main (int w, String v) { };
+}
