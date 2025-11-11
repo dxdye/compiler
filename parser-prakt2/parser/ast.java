@@ -400,7 +400,9 @@ class PrintStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        System.out.println("PrintStmtNode decompile not implemented yet");
+        p.write("System.out.println(");
+        myExp.decompile(p, indent);
+        p.write(");");
     }
 
     // 1 kid
@@ -432,6 +434,12 @@ class IfStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("if (");
+        myExp.decompile(p, indent);
+        p.write(") {\n");
+        myStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("}");
     }
 
     // 2 kids
@@ -553,6 +561,9 @@ class StringLitNode extends ExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("\"");
+        p.write(myStrVal);
+        p.write("\"");
     }
 
     private int myLineNum;
@@ -567,6 +578,7 @@ class TrueNode extends ExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" true ");
     }
 
     private int myLineNum;
@@ -580,6 +592,7 @@ class FalseNode extends ExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" false ");
     }
 
     private int myLineNum;

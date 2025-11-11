@@ -6,6 +6,8 @@ public class Hello {
     int abc; 
 
     y = 5;
-    
+    if ( true ) {
+      System.out.println("Hello Simple!");
+    }
   }
 }
