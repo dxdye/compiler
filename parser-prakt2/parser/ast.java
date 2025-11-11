@@ -121,7 +121,7 @@ class ProgramNode extends ASTnode {
         p.print("public class ");
         myId.decompile(p, 0);
         p.println(" {");
-        myClassBody.decompile(p, 2);
+        myClassBody.decompile(p, 0);
         p.println("}");
     }
 
@@ -136,7 +136,7 @@ class ClassBodyNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        myDeclList.decompile(p, indent);
+        myDeclList.decompile(p, indent + 2);
     }
 
     // 1 kid
@@ -205,9 +205,9 @@ class MethodBodyNode extends ASTnode {
 
     public void decompile(PrintWriter p, int indent) {
         p.write("\n");
-        myDeclList.decompile(p, indent + 4);
+        myDeclList.decompile(p, indent + 2);
         p.write("\n");
-        myStmtList.decompile(p, indent + 4);
+        myStmtList.decompile(p, indent + 2);
     }
 
     // 2 kids
@@ -263,12 +263,11 @@ class FieldDeclNode extends DeclNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        doIndent(p, indent);
         p.print("static ");
         myType.decompile(p, indent);
         p.print(" ");
         myId.decompile(p, indent);
-        p.write(";");
+        p.print(";");
     }
 
     // 2 kids
@@ -305,10 +304,10 @@ class MethodDeclNode extends DeclNode {
 
     public void decompile(PrintWriter p, int indent) {
         // write decompile function
-        doIndent(p, indent);
         p.print("public ");
         p.print("static ");
         myReturnType.decompile(p, indent);
+        p.print(" ");
         myId.decompile(p, indent);
         p.print(" ");
         if (this.myFormalsList == null) {
@@ -319,7 +318,7 @@ class MethodDeclNode extends DeclNode {
         p.print(" {");
         this.myBody.decompile(p, indent);
         doIndent(p, indent);
-        p.print(" }");
+        p.print("}");
     }
 
     // 4 kids
@@ -357,7 +356,7 @@ class VoidNode extends TypeNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.print("void ");
+        p.print("void");
     }
 }
 
