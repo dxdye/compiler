@@ -254,7 +254,8 @@ exp		::=
 	  | exp OR exp
 		| exp EQUALS exp
 		| exp NOTEQUALS exp
-		| exp LESS exp
+		| exp:e0 LESS exp:e1
+		{: RESULT = new LessNode(e0, e1); :}
 		| exp GREATER exp
 		| exp LESSEQ exp
 		| exp GREATEREQ exp

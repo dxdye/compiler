@@ -739,6 +739,9 @@ class LessNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " < " );
+        this.myExp2.decompile(p, indent);
     }
 }
 

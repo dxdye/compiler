@@ -996,7 +996,13 @@ class CUP$parser$actions {
           case 46: // exp ::= exp LESS exp 
             {
               ExpNode RESULT =null;
-
+		int e0left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
+		int e0right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
+		ExpNode e0 = (ExpNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
+		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
+		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
+		ExpNode e1 = (ExpNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		 RESULT = new LessNode(e0, e1); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("exp",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;

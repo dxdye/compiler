@@ -7,7 +7,7 @@ public class Hello {
     int y;
     int abc; 
     y = 5; 
-    if (true) {
+    if (i < 0) {
                 System.out.println("Hello Simple!");
     }
   }
