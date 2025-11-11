@@ -268,7 +268,7 @@ class FieldDeclNode extends DeclNode {
         myType.decompile(p, indent);
         p.print(" ");
         myId.decompile(p, indent);
-        p.println(";");
+        p.write(";");
     }
 
     // 2 kids
