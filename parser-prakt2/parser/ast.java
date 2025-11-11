@@ -645,6 +645,8 @@ class UnaryMinusNode extends UnaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write( "-" );
+        this.myExp.decompile(p, indent);
     }
 }
 
@@ -654,6 +656,8 @@ class NotNode extends UnaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write( "!" );
+        this.myExp.decompile(p, indent);
     }
 }
 
@@ -667,6 +671,9 @@ class PlusNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( "+" );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -676,6 +683,9 @@ class MinusNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( "-" );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -685,6 +695,9 @@ class TimesNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( "*" );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -694,6 +707,9 @@ class DivideNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( "/" );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -703,6 +719,9 @@ class AndNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " && " );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -712,6 +731,9 @@ class OrNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " || " );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -721,6 +743,10 @@ class EqualsNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " == " );
+        this.myExp2.decompile(p, indent);
+ 
     }
 }
 
@@ -730,6 +756,9 @@ class NotEqualsNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " != " );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -751,15 +780,22 @@ class GreaterNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " > " );
+        this.myExp2.decompile(p, indent);
     }
 }
 
 class LessEqNode extends BinaryExpNode {
     public LessEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " <= " );
+        this.myExp2.decompile(p, indent);
     }
 }
 
@@ -769,5 +805,8 @@ class GreaterEqNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write( " >= " );
+        this.myExp2.decompile(p, indent);
     }
 }
