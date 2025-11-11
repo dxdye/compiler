@@ -235,7 +235,8 @@ stmt		::=
 
 					| RETURN SEMICOLON
 					| RETURN exp:e0 SEMICOLON // return with a value
-					| id LPAREN RPAREN SEMICOLON  	  // function call with no args
+					| id:e0 LPAREN RPAREN SEMICOLON  	  // function call with no args
+					{: RESULT = new CallStmtNode(e0, new ExpListNode(new Sequence())); :}
 	        | id LPAREN actualList RPAREN SEMICOLON // with args
 					| LCURLY varDeclList stmtList RCURLY  // nested block
 					{: RESULT = new MethodBodyNode(new DeclListNode(new Sequence()), new StmtListNode(new Sequence())); :}
@@ -245,21 +246,34 @@ stmt		::=
 
 
 exp		::= 
-		exp PLUS exp
-	  | exp MINUS exp
-	  | exp TIMES exp
-	  | exp DIVIDE exp
-	  | NOT exp
-	  | exp AND exp
-	  | exp OR exp
-		| exp EQUALS exp
-		| exp NOTEQUALS exp
+		exp:e0 PLUS exp:e1
+		{: RESULT = new PlusNode(e0, e1); :}
+	  | exp:e0 MINUS exp:e1
+		{: RESULT = new MinusNode(e0, e1); :}
+	  | exp:e0 TIMES exp:e1
+		{: RESULT = new TimesNode(e0, e1); :}
+	  | exp:e0 DIVIDE exp:e1
+		{: RESULT = new DivideNode(e0, e1); :}
+	  | NOT exp:e0
+		{: RESULT = new NotNode(e0); :}
+	  | exp:e0 AND exp:e1
+		{: RESULT = new AndNode(e0, e1); :}
+	  | exp:e0 OR exp:e1
+		{: RESULT = new OrNode(e0, e1); :}
+		| exp:e0 EQUALS exp:e1
+		{: RESULT = new EqualsNode(e0, e1); :}
+		| exp:e0 NOTEQUALS exp:e1
+		{: RESULT = new NotEqualsNode(e0, e1); :}
 		| exp:e0 LESS exp:e1
 		{: RESULT = new LessNode(e0, e1); :}
-		| exp GREATER exp
-		| exp LESSEQ exp
-		| exp GREATEREQ exp
-		| MINUS exp
+		| exp:e0 GREATER exp:e1
+		{: RESULT = new GreaterNode(e0, e1); :}
+		| exp:e0 LESSEQ exp:e1
+		{: RESULT = new LessEqNode(e0, e1); :}
+		| exp:e0 GREATEREQ exp:e1
+		{: RESULT = new GreaterEqNode(e0, e1); :}
+		| MINUS exp:e
+		{: RESULT = new UnaryMinusNode(e); :}
 		| id:e
 		{: RESULT = e; :}
 	  | INTLITERAL:e
@@ -275,7 +289,6 @@ exp		::=
 	 	| id LPAREN actualList RPAREN // with args
 
 		;
-
 actualList	::= exp:e0
 		{: 
 			var x = new Sequence();

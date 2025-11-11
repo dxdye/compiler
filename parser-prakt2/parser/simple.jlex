@@ -422,7 +422,7 @@ ILLEGAL_STRING_CHAR = [#&\^]
 }
 
 /* Rules for Literals */
-{NUMBER} {// NOTE: the following computation of the integer value does NOT
+<YYINITIAL> {NUMBER} {// NOTE: the following computation of the integer value does NOT
 	    //       check for overflow.  This must be changed.
 			System.out.println("Found an integer literal: " + yytext());	
 	    long val = Long.parseLong(yytext());
@@ -520,6 +520,7 @@ ILLEGAL_STRING_CHAR = [#&\^]
 <BLOCKCOMMENT>. {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }
+
 <BLOCKCOMMENT><<EOF>> {
 		Errors.fatal(yyline+1, CharNum.num,"Unterminated comment at EOF");
 		yybegin(YYINITIAL); // Return to the initial state

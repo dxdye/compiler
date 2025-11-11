@@ -516,6 +516,10 @@ ILLEGAL_STRING_CHAR = [#&\^]
 			CharNum.num += 2;
 }
 
+<BLOCKCOMMENT>{WHITESPACE} {
+			CharNum.num += yytext().length(); // Consume the newline character
+			yybegin( BLOCKCOMMENT);
+}
 <BLOCKCOMMENT>. {
     CharNum.num += yytext().length(); // Consume any other characters inside comments
 }

@@ -3,12 +3,35 @@
 public class Hello {
   static int x;
   static int g;
+  public static void myFuncDoesNothing() {
+    // this function does nothing
+  }
+
+  /* no return value 
+    public static void myFuncDoesNothing() {
+        return 9; 
+
+  }
+  
+  */
   public static void main(int w, String v) {
-    int y;
+            int y;
     int abc; 
     y = 5; 
-    if (i < 0) {
+    abc = -99 + y; 
+    if (i < 0 && abc >= 99 && abc != 10 && w == 20 && w > 0 || v == "bla" && g <= 100 && x >= 0) {
                 System.out.println("Hello Simple!");
     }
+    if (!false) {
+        System.out.println("This is true!");
+    }
+    else {
+        System.out.println("This is false!");
+        abc = -85; 
+    }
+    do {
+      System.out.println("i love programming!");
+    } while (true)
+
   }
 }

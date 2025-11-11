@@ -456,6 +456,15 @@ class IfElseStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("if (");
+        myExp.decompile(p, indent);
+        p.write(") {\n");
+        myThenStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("} else {\n");
+        myElseStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("}");
     }
 
     // 3 kids
@@ -471,6 +480,12 @@ class WhileStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("do {\n");
+        myStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("} while (");
+        myExp.decompile(p, indent);
+        p.write(");");
     }
 
     // 2 kids
@@ -490,6 +505,8 @@ class CallStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myId.decompile(p, indent);
+        myExpList.decompile(p, indent);
     }
 
     // 2 kids
@@ -672,7 +689,7 @@ class PlusNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( "+" );
+        p.write( " + " );
         this.myExp2.decompile(p, indent);
     }
 }
@@ -684,7 +701,7 @@ class MinusNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( "-" );
+        p.write( " - " );
         this.myExp2.decompile(p, indent);
     }
 }
@@ -696,7 +713,7 @@ class TimesNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( "*" );
+        p.write( " * " );
         this.myExp2.decompile(p, indent);
     }
 }
@@ -708,7 +725,7 @@ class DivideNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( "/" );
+        p.write( " / " );
         this.myExp2.decompile(p, indent);
     }
 }
