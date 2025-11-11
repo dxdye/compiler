@@ -151,7 +151,9 @@ class DeclListNode extends ASTnode {
     public void decompile(PrintWriter p, int indent) {
         try {
             for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                doIndent(p, indent);
                 ((DeclNode) myDecls.getCurrent()).decompile(p, indent);
+                p.write("\n");
             }
         } catch (NoCurrentException ex) {
             System.err.println("unexpected NoCurrentException in DeclListNode.print");
@@ -202,8 +204,10 @@ class MethodBodyNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        myDeclList.decompile(p, indent + 2);
-        myStmtList.decompile(p, indent + 2);
+        p.write("\n");
+        myDeclList.decompile(p, indent + 4);
+        p.write("\n");
+        myStmtList.decompile(p, indent + 4);
     }
 
     // 2 kids
@@ -217,6 +221,17 @@ class StmtListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        for ( myStmts.start(); myStmts.isCurrent(); ) {
+            try {
+                doIndent(p, indent);
+                ((StmtNode) myStmts.getCurrent()).decompile(p, indent);
+                myStmts.advance();
+                p.write("\n");
+            } catch (NoCurrentException ex) {
+                System.err.println("unexpected NoCurrentException in StmtListNode.print");
+                System.exit(-1);
+            }
+        }
     }
 
     // sequence of kids (StmtNodes)
@@ -268,6 +283,10 @@ class VarDeclNode extends DeclNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myType.decompile(p, indent);
+        p.print(" ");
+        myId.decompile(p, indent);
+        p.write("; ");
     }
 
     // 2 kids
@@ -296,12 +315,11 @@ class MethodDeclNode extends DeclNode {
             System.out.println("unexpected null myFormalsList in MethodDeclNode.decompile");
         } else {
             this.myFormalsList.decompile(p, indent);
-
         }
         p.print(" {");
         this.myBody.decompile(p, indent);
+        doIndent(p, indent);
         p.print(" }");
-        p.println(";");
     }
 
     // 4 kids
@@ -397,6 +415,10 @@ class AssignStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myId.decompile(p, indent);
+        p.write(" = ");
+        myExp.decompile(p, indent);
+        p.write(";");
     }
 
     // 2 kids
@@ -516,6 +538,7 @@ class IntLitNode extends ExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(Long.toString(myIntVal));
     }
 
     private int myLineNum;

@@ -1,5 +1,13 @@
 public class Hello {
-  static int x;
-  static int g;
-  public static void main (int w, String v) { };
+    static int x;
+
+    static int g;
+
+    public static void main (int w, String v) {
+      int y; 
+      int abc; 
+
+      y = 5;
+      
+   }
 }
