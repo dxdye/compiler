@@ -211,7 +211,7 @@ switchGroupList   ::= switchGroupList:e0 switchGroup:e1
 		{: RESULT = new Sequence(); :}
 		;
 
-switchGroup	::=   switchLabel stmtList:e0
+switchGroup	::=   switchLabel:e0 stmtList:e1
 		;
 
 switchLabel	::=   CASE exp:e COMMA
@@ -286,20 +286,22 @@ exp		::=
 		{: RESULT = new TrueNode(e.linenum, e.charnum); :}
 	  | FALSE:e
 		{: RESULT = new FalseNode(e.linenum, e.charnum); :}
-		| LPAREN exp RPAREN
-	 	| id LPAREN RPAREN   	      // function call with no args
-	 	| id LPAREN actualList RPAREN // with args
-
+		| LPAREN exp:e RPAREN
+		{: RESULT = e; :}
+	 	| id:d LPAREN RPAREN   	      // function call with no args
+		{: RESULT = new CallExprNode(d, new ExpListNode(new Sequence())); :}
+	 	| id:d LPAREN actualList:e RPAREN // with args !!!added CallExprNode
+		{: RESULT = new CallExprNode(d, new ExpListNode(e)); :}
 		;
 actualList	::= exp:e0
 		{: 
 			var x = new Sequence();
-			x.addToFront(e0);
+			x.addToEnd(e0);
 			RESULT = x;
 			:}
 		| actualList:e0 COMMA exp:e1
 		{: 
-				e0.addToFront(e1);
+				e0.addToEnd(e1);
 				RESULT = e0;
 		:}
 		;

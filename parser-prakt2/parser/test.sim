@@ -34,7 +34,13 @@ public class Hello {
     int abc; 
     y = 5; 
     abc = -99 + y; 
+    myFuncDoesNothing(); 
+
+    // CallStmts 
     main(w, v);
+    main(myFuncDoesNothing(), v, g);
+    main(v, myFuncDoesNothing(7, 8), g);
+
     if (i < 0 && abc >= 99 && abc != 10 && w == 20 && w > 0 || v == "bla" && g <= 100 && x >= 0) {
                 System.out.println("Hello Simple!");
     }
