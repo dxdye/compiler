@@ -738,7 +738,9 @@ class CUP$parser$actions {
 		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object e1 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = e0; RESULT.addToFront(e1); 
+		 e0.addToEnd(e1);
+			 RESULT = e0; 
+		 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("switchGroupList",16, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -762,7 +764,9 @@ class CUP$parser$actions {
 		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Sequence e1 = (Sequence)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		 RESULT = new CaseStmtNode( 
+				(ExpNode) e0, new StmtListNode(e1)
+		); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("switchGroup",18, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -774,7 +778,7 @@ class CUP$parser$actions {
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		ExpNode e = (ExpNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-
+		 RESULT = e; 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("switchLabel",19, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1206,7 +1210,7 @@ class CUP$parser$actions {
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		ExpNode e = (ExpNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-		 RESULT = e; 
+		 RESULT = new ParenthesizedExpNode(e); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("exp",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;

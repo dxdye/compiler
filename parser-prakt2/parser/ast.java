@@ -171,20 +171,20 @@ class FormalsListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        if ( myFormals == null) { // shouldn't be possible
+        if (myFormals == null) { // shouldn't be possible
             System.out.println("unexpected null myFormals in FormalsListNode.print");
             p.print("()");
             return;
         }
         p.print("(");
         try {
-            int i = 0; 
+            int i = 0;
             for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
                 ((FormalDeclNode) myFormals.getCurrent()).decompile(p, indent);
                 if (myFormals.isCurrent() && i < myFormals.length() - 1) {
                     p.print(", ");
                 }
-                ++i; 
+                ++i;
             }
         } catch (NoCurrentException ex) {
             System.err.println("unexpected NoCurrentException in FormalsListNode.print");
@@ -221,7 +221,7 @@ class StmtListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        for ( myStmts.start(); myStmts.isCurrent(); ) {
+        for (myStmts.start(); myStmts.isCurrent();) {
             try {
                 doIndent(p, indent);
                 ((StmtNode) myStmts.getCurrent()).decompile(p, indent);
@@ -245,7 +245,7 @@ class ExpListNode extends ASTnode {
 
     public void decompile(PrintWriter p, int indent) {
         p.write("(");
-        for ( myExps.start(); myExps.isCurrent(); ) {
+        for (myExps.start(); myExps.isCurrent();) {
             try {
                 ((ExpNode) myExps.getCurrent()).decompile(p, indent);
                 myExps.advance();
@@ -256,7 +256,7 @@ class ExpListNode extends ASTnode {
                 System.err.println("unexpected NoCurrentException in ExpListNode.print");
                 System.exit(-1);
             }
-        }   
+        }
         p.write(")");
     }
 
@@ -554,7 +554,17 @@ class SwitchGroupListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        
+        for ( 
+            mySwitchGroups.start(); mySwitchGroups.isCurrent();) {
+            try {
+                ((CaseStmtNode) mySwitchGroups.getCurrent()).decompile(p, indent);
+                mySwitchGroups.advance();
+            } catch (NoCurrentException ex) {
+                System.err.println("unexpected NoCurrentException in SwitchGroupListNode.print");
+                System.exit(-1);
+            }
+        }
+
     }
 
     // sequence of kids (SwitchGroupNodes)
@@ -685,7 +695,7 @@ class UnaryMinusNode extends UnaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.write( "-" );
+        p.write("-");
         this.myExp.decompile(p, indent);
     }
 }
@@ -696,7 +706,7 @@ class NotNode extends UnaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.write( "!" );
+        p.write("!");
         this.myExp.decompile(p, indent);
     }
 }
@@ -712,7 +722,7 @@ class PlusNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " + " );
+        p.write(" + ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -724,7 +734,7 @@ class MinusNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " - " );
+        p.write(" - ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -736,7 +746,7 @@ class TimesNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " * " );
+        p.write(" * ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -748,7 +758,7 @@ class DivideNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " / " );
+        p.write(" / ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -760,7 +770,7 @@ class AndNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " && " );
+        p.write(" && ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -772,7 +782,7 @@ class OrNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " || " );
+        p.write(" || ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -784,9 +794,9 @@ class EqualsNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " == " );
+        p.write(" == ");
         this.myExp2.decompile(p, indent);
- 
+
     }
 }
 
@@ -797,7 +807,7 @@ class NotEqualsNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " != " );
+        p.write(" != ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -809,7 +819,7 @@ class LessNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " < " );
+        p.write(" < ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -821,7 +831,7 @@ class GreaterNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " > " );
+        p.write(" > ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -834,7 +844,7 @@ class LessEqNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " <= " );
+        p.write(" <= ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -846,7 +856,7 @@ class GreaterEqNode extends BinaryExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         this.myExp1.decompile(p, indent);
-        p.write( " >= " );
+        p.write(" >= ");
         this.myExp2.decompile(p, indent);
     }
 }
@@ -879,4 +889,52 @@ class CallExprNode extends ExpNode {
     // 2 kids
     private IdNode myId;
     private ExpListNode myExpList;
+}
+
+class ParenthesizedExpNode extends ExpNode {
+    public ParenthesizedExpNode(ExpNode exp) {
+        myExp = exp;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.write("(");
+        myExp.decompile(p, indent);
+        p.write(")");
+    }
+
+    // 1 kid
+    private ExpNode myExp;
+}
+
+class CaseStmtNode extends StmtNode {
+    private ExpNode myCaseExpr;
+    private StmtListNode myStmtList;
+
+    public CaseStmtNode(ExpNode caseValue, StmtListNode stmtList) {
+        myCaseExpr = caseValue;
+        myStmtList = stmtList;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        if (myCaseExpr== null) {
+            doIndent(p, indent);
+            p.write("default");
+            p.write(",\n");
+            myStmtList.decompile(p, indent + 2);
+            doIndent(p, indent + 2);
+            p.println(); 
+
+
+        } else {
+            doIndent(p, indent);
+            p.write("case ");
+            myCaseExpr.decompile(p, indent);
+            p.write(",\n");
+            myStmtList.decompile(p, indent + 2);
+            doIndent(p, indent + 2);
+            p.println(); 
+
+        }
+
+    }
 }
