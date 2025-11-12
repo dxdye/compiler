@@ -242,6 +242,7 @@ stmt		::=
 
 					| RETURN SEMICOLON
 					| RETURN exp:e0 SEMICOLON // return with a value
+					{: RESULT = new ReturnExprStmtNode(e0); :}
 					| id:e0 LPAREN RPAREN SEMICOLON  	  // function call with no args
 					{: RESULT = new CallStmtNode(e0, new ExpListNode(new Sequence())); :}
 	        | id:e0 LPAREN actualList:e1 RPAREN SEMICOLON // with args

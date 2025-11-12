@@ -6,6 +6,10 @@ public class Hello {
   }
   public static void myFunctionWithReturn () {
 
+    return true;
+  }
+  public static void myFunctionWithReturn () {
+
     switch (x) {
       case 1,
         System.out.println("x is one");
@@ -30,10 +34,10 @@ public class Hello {
     main(w, v);
     main(myFuncDoesNothing(), v, g);
     main(v, myFuncDoesNothing(7, 8), g);
-    if ((i < 0 && abc >= 99 && abc != 10 && w == 20) && w > 0 || v == "bla" && g <= 100 && x >= 0) {
+    if ( (i < 0 && abc >= 99 && abc != 10 && w == 20) && w > 0 || v == "bla" && g <= 100 && x >= 0 ) {
       System.out.println("Hello Simple!");
     }
-    if (! false ) {
+    if ( !false && !abc || 8 ) {
       System.out.println("This is true!");
     } else {
       System.out.println("This is false!");
@@ -41,6 +45,6 @@ public class Hello {
     }
     do {
       System.out.println("i love programming!");
-    } while ( true );
+    } while (true);
   }
 }

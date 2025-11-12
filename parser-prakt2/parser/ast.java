@@ -448,9 +448,9 @@ class IfStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.write("if (");
+        p.write("if ( ");
         myExp.decompile(p, indent);
-        p.write(") {\n");
+        p.write(" ) {\n");
         myStmtList.decompile(p, indent + 2);
         doIndent(p, indent);
         p.write("}");
@@ -470,9 +470,9 @@ class IfElseStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.write("if (");
+        p.write("if ( ");
         myExp.decompile(p, indent);
-        p.write(") {\n");
+        p.write(" ) {\n");
         myThenStmtList.decompile(p, indent + 2);
         doIndent(p, indent);
         p.write("} else {\n");
@@ -580,6 +580,22 @@ class ReturnStmtNode extends StmtNode {
     }
 }
 
+class ReturnExprStmtNode extends StmtNode { //added class
+    ExpNode myExp;
+    public ReturnExprStmtNode(
+        ExpNode exp
+    ) {
+        myExp = exp;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.write("return ");
+        this.myExp.decompile(p, indent);
+        p.write(";");
+    }
+}
+
+
 // **********************************************************************
 // ExpNode and its subclasses
 // **********************************************************************
@@ -628,7 +644,7 @@ class TrueNode extends ExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.write(" true ");
+        p.write("true");
     }
 
     private int myLineNum;
@@ -642,7 +658,7 @@ class FalseNode extends ExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        p.write(" false ");
+        p.write("false");
     }
 
     private int myLineNum;
