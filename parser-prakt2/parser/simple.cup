@@ -205,16 +205,17 @@ stmtList	::= stmtList:e0 stmt:e1
 
 /* the following rules are for the switch / case statement */
 
-switchGroupList   ::= switchGroupList switchGroup
+switchGroupList   ::= switchGroupList:e0 switchGroup:e1
+		{: RESULT = e0; RESULT.addToFront(e1); :}
 		| /* epsilon */
 		{: RESULT = new Sequence(); :}
 		;
 
-switchGroup	::=   switchLabel stmtList
+switchGroup	::=   switchLabel stmtList:e0
 		;
 
-switchLabel	::=   CASE exp COMMA
-		|     				DEFAULT COMMA
+switchLabel	::=   CASE exp:e COMMA
+		| DEFAULT COMMA
 		;      
 		     
 stmt		::= 	
@@ -237,7 +238,8 @@ stmt		::=
 					| RETURN exp:e0 SEMICOLON // return with a value
 					| id:e0 LPAREN RPAREN SEMICOLON  	  // function call with no args
 					{: RESULT = new CallStmtNode(e0, new ExpListNode(new Sequence())); :}
-	        | id LPAREN actualList RPAREN SEMICOLON // with args
+	        | id:e0 LPAREN actualList:e1 RPAREN SEMICOLON // with args
+					{: RESULT = new CallStmtNode(e0, new ExpListNode(e1)); :}
 					| LCURLY varDeclList stmtList RCURLY  // nested block
 					{: RESULT = new MethodBodyNode(new DeclListNode(new Sequence()), new StmtListNode(new Sequence())); :}
 					| SWITCH LPAREN exp:ex RPAREN LCURLY switchGroupList:sg RCURLY

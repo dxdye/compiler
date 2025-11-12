@@ -244,6 +244,20 @@ class ExpListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
+        for ( myExps.start(); myExps.isCurrent(); ) {
+            try {
+                ((ExpNode) myExps.getCurrent()).decompile(p, indent);
+                myExps.advance();
+                if (myExps.isCurrent()) {
+                    p.write(", ");
+                }
+            } catch (NoCurrentException ex) {
+                System.err.println("unexpected NoCurrentException in ExpListNode.print");
+                System.exit(-1);
+            }
+        }   
+        p.write(")");
     }
 
     // sequence of kids (ExpNodes)
@@ -507,6 +521,7 @@ class CallStmtNode extends StmtNode {
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);
         myExpList.decompile(p, indent);
+        p.write(";");
     }
 
     // 2 kids
@@ -524,6 +539,12 @@ class SwitchStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("switch (");
+        myExp.decompile(p, indent);
+        p.write(") {\n");
+        myCaseList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("}");
     }
 }
 
@@ -533,6 +554,7 @@ class SwitchGroupListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        
     }
 
     // sequence of kids (SwitchGroupNodes)
@@ -544,6 +566,7 @@ class ReturnStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("return");
     }
 }
 
@@ -825,5 +848,14 @@ class GreaterEqNode extends BinaryExpNode {
         this.myExp1.decompile(p, indent);
         p.write( " >= " );
         this.myExp2.decompile(p, indent);
+    }
+}
+
+class EmptyExprNode extends ExpNode {
+    public EmptyExprNode() {
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        // do nothing -- represents an empty expression
     }
 }
