@@ -377,7 +377,6 @@ class VoidNode extends TypeNode {
 class IntNode extends TypeNode {
     public IntNode() {
     }
-
     public void decompile(PrintWriter p, int indent) {
         p.print("int");
     }
@@ -749,9 +748,11 @@ class MinusNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" (");
         this.myExp1.decompile(p, indent);
         p.write(" - ");
         this.myExp2.decompile(p, indent);
+        p.write(" )");
     }
 }
 

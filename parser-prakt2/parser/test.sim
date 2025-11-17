@@ -1,8 +1,9 @@
-// Erstellt von Julius Rommel und Andreas Weinzierl
+// Erstellt von Tilman Bertram
 
 public class Hello {
   static int x;
   static int g;
+  static boolean y;
   public static void myFuncDoesNothing() {
     // this function does nothing
   }
@@ -15,7 +16,7 @@ public class Hello {
   }
   */
 
-  public static void myFunctionWithReturn() {
+  public static int myFunctionWithReturn() {
     return true; 
   }
   public static void myFunctionWithReturn() {
@@ -37,6 +38,7 @@ public class Hello {
     // Klammern
     abc = (-99 + y) * 9; 
     myFuncDoesNothing(); 
+    y = (a + b) - c / d * (e > f);
 
     // CallStmts 
     main(w, v);

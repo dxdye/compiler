@@ -87,7 +87,7 @@ non terminal Sequence         stmtList;
 non terminal Sequence 				switchGroupList;
 
 non terminal FormalsListNode  formals;
-non terminal switchGroup;
+non terminal CaseStmtNode 		switchGroup;
 non terminal switchLabel;
 non terminal ExpNode          exp;
 
@@ -141,8 +141,8 @@ fieldDecl	::= STATIC type:e0 id:e1 SEMICOLON
 
 methodDecl	::= PUBLIC STATIC VOID:a id:b formals:c methodBody:d // no return value
 								{: RESULT = new MethodDeclNode(a, b, c, d); :}
-                | PUBLIC STATIC INT:a id:b formals:c  methodBody:d // int return value allowed
-								{: RESULT = new MethodDeclNode(a, b, c, d); :}
+                | PUBLIC STATIC INT id:b formals:c  methodBody:d // int return value allowed
+								{: RESULT = new MethodDeclNode(new IntNode() , b, c, d); :}
 	        ;						
 
 

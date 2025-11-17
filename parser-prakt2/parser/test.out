@@ -1,10 +1,11 @@
 public class Hello {
   static int x;
   static int g;
+  static boolean y;
   public static void myFuncDoesNothing () {
 
   }
-  public static void myFunctionWithReturn () {
+  public static int myFunctionWithReturn () {
 
     return true;
   }
@@ -31,6 +32,7 @@ public class Hello {
     abc = -99 + y;
     abc = (-99 + y) * 9;
     myFuncDoesNothing();
+    y = (a + b) - c / d * (e > f);
     main(w, v);
     main(myFuncDoesNothing(), v, g);
     main(v, myFuncDoesNothing(7, 8), g);

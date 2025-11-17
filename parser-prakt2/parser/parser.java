@@ -549,9 +549,6 @@ class CUP$parser$actions {
           case 9: // methodDecl ::= PUBLIC STATIC INT id formals methodBody 
             {
               MethodDeclNode RESULT =null;
-		int aleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).left;
-		int aright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).right;
-		IntNode a = (IntNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		int bleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).left;
 		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)).right;
 		IdNode b = (IdNode)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-2)).value;
@@ -561,7 +558,7 @@ class CUP$parser$actions {
 		int dleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int dright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		MethodBodyNode d = (MethodBodyNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		 RESULT = new MethodDeclNode(a, b, c, d); 
+		 RESULT = new MethodDeclNode(new IntNode() , b, c, d); 
               CUP$parser$result = parser.getSymbolFactory().newSymbol("methodDecl",7, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-5)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -737,7 +734,7 @@ class CUP$parser$actions {
 		Sequence e0 = (Sequence)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
 		int e1left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e1right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
-		Object e1 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
+		CaseStmtNode e1 = (CaseStmtNode)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		 e0.addToEnd(e1);
 			 RESULT = e0; 
 		 
@@ -757,7 +754,7 @@ class CUP$parser$actions {
           /*. . . . . . . . . . . . . . . . . . . .*/
           case 23: // switchGroup ::= switchLabel stmtList 
             {
-              Object RESULT =null;
+              CaseStmtNode RESULT =null;
 		int e0left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int e0right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Object e0 = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
