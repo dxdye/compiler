@@ -62,7 +62,7 @@ switchLabel	::=   CASE exp COLON
 		;      
 		     
 stmt		::= PRINT LPAREN exp RPAREN SEMICOLON
-	        | type id ASSIGN exp SEMICOLON
+	        | id ASSIGN exp SEMICOLON
 	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY
 	        | IF LPAREN exp RPAREN LCURLY stmtList RCURLY ELSE LCURLY stmtList RCURLY
 	        | DO LCURLY stmtList RCURLY WHILE LPAREN exp RPAREN 

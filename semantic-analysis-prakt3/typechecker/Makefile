@@ -63,7 +63,7 @@ clean:
 test:	test.sim P3.class 
 	@echo "If you get an error below your Parser does not work yet!"
 	@echo "Modify the simple.cup specification to implement the language!"
-	java  -cp  $(CLASSPATH)  P3 test.sim test.out 
+	java -cp $(CLASSPATH) P3 test.sim test.out
 
 ###
 # submit
