@@ -95,13 +95,14 @@ import java.io.*;
 // **********************************************************************
 // ASTnode class (base class for all other kinds of nodes)
 // **********************************************************************
-abstract class ASTnode { 
+abstract class ASTnode {
     // every subclass must provide an decompile operation
     abstract public void decompile(PrintWriter p, int indent);
 
     // this method can be used by the decompile methods to do indenting
     protected void doIndent(PrintWriter p, int indent) {
-	for (int k=0; k<indent; k++) p.print(" ");
+        for (int k = 0; k < indent; k++)
+            p.print(" ");
     }
 }
 
@@ -111,16 +112,17 @@ abstract class ASTnode {
 // **********************************************************************
 class ProgramNode extends ASTnode {
     public ProgramNode(IdNode id, ClassBodyNode classBody) {
-	myId = id;
-	myClassBody = classBody;
+        myId = id;
+        myClassBody = classBody;
     }
 
     public void decompile(PrintWriter p, int indent) {
-	p.print("public class ");
-	myId.decompile(p, 0);
-	p.println(" {");
-	myClassBody.decompile(p, 2);
-	p.println("}");
+        System.out.println("ProgramNode write");
+        p.print("public class ");
+        myId.decompile(p, 0);
+        p.println(" {");
+        myClassBody.decompile(p, 0);
+        p.println("}");
     }
 
     // 2 kids
@@ -130,11 +132,11 @@ class ProgramNode extends ASTnode {
 
 class ClassBodyNode extends ASTnode {
     public ClassBodyNode(DeclListNode declList) {
-	myDeclList = declList;
+        myDeclList = declList;
     }
 
     public void decompile(PrintWriter p, int indent) {
-	myDeclList.decompile(p, indent);
+        myDeclList.decompile(p, indent + 2);
     }
 
     // 1 kid
@@ -143,43 +145,69 @@ class ClassBodyNode extends ASTnode {
 
 class DeclListNode extends ASTnode {
     public DeclListNode(Sequence S) {
-	myDecls = S;
+        myDecls = S;
     }
 
     public void decompile(PrintWriter p, int indent) {
-	try {
-	    for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
-		((DeclNode)myDecls.getCurrent()).decompile(p, indent);
-	    }
-	} catch (NoCurrentException ex) {
-	    System.err.println("unexpected NoCurrentException in DeclListNode.print");
-	    System.exit(-1);
-	}
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                doIndent(p, indent);
+                ((DeclNode) myDecls.getCurrent()).decompile(p, indent);
+                p.write("\n");
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in DeclListNode.print");
+            System.exit(-1);
+        }
     }
 
-  // sequence of kids (DeclNodes)
-  private Sequence myDecls;
+    // sequence of kids (DeclNodes)
+    public Sequence myDecls;
 }
 
 class FormalsListNode extends ASTnode {
     public FormalsListNode(Sequence S) {
-	myFormals = S;
+        myFormals = S;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        if (myFormals == null) { // shouldn't be possible
+            System.out.println("unexpected null myFormals in FormalsListNode.print");
+            p.print("()");
+            return;
+        }
+        p.print("(");
+        try {
+            int i = 0;
+            for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
+                ((FormalDeclNode) myFormals.getCurrent()).decompile(p, indent);
+                if (myFormals.isCurrent() && i < myFormals.length() - 1) {
+                    p.print(", ");
+                }
+                ++i;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in FormalsListNode.print");
+            System.exit(-1);
+        }
+        p.print(")");
     }
 
-  // sequence of kids (FormalDeclNodes)
+    // sequence of kids (FormalDeclNodes)
     private Sequence myFormals;
 }
 
 class MethodBodyNode extends ASTnode {
     public MethodBodyNode(DeclListNode declList, StmtListNode stmtList) {
-	myDeclList = declList;
-	myStmtList = stmtList;
+        myDeclList = declList;
+        myStmtList = stmtList;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("\n");
+        myDeclList.decompile(p, indent + 2);
+        p.write("\n");
+        myStmtList.decompile(p, indent + 2);
     }
 
     // 2 kids
@@ -189,10 +217,21 @@ class MethodBodyNode extends ASTnode {
 
 class StmtListNode extends ASTnode {
     public StmtListNode(Sequence S) {
-	myStmts = S;
+        myStmts = S;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        for (myStmts.start(); myStmts.isCurrent();) {
+            try {
+                doIndent(p, indent);
+                ((StmtNode) myStmts.getCurrent()).decompile(p, indent);
+                myStmts.advance();
+                p.write("\n");
+            } catch (NoCurrentException ex) {
+                System.err.println("unexpected NoCurrentException in StmtListNode.print");
+                System.exit(-1);
+            }
+        }
     }
 
     // sequence of kids (StmtNodes)
@@ -201,9 +240,24 @@ class StmtListNode extends ASTnode {
 
 class ExpListNode extends ASTnode {
     public ExpListNode(Sequence S) {
-	myExps = S;
+        myExps = S;
     }
+
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
+        for (myExps.start(); myExps.isCurrent();) {
+            try {
+                ((ExpNode) myExps.getCurrent()).decompile(p, indent);
+                myExps.advance();
+                if (myExps.isCurrent()) {
+                    p.write(", ");
+                }
+            } catch (NoCurrentException ex) {
+                System.err.println("unexpected NoCurrentException in ExpListNode.print");
+                System.exit(-1);
+            }
+        }
+        p.write(")");
     }
 
     // sequence of kids (ExpNodes)
@@ -213,22 +267,21 @@ class ExpListNode extends ASTnode {
 // **********************************************************************
 // DeclNode and its subclasses
 // **********************************************************************
-abstract class DeclNode extends ASTnode
-{
+abstract class DeclNode extends ASTnode {
 }
 
 class FieldDeclNode extends DeclNode {
     public FieldDeclNode(TypeNode type, IdNode id) {
-	myType = type;
-	myId = id;
+        myType = type;
+        myId = id;
     }
+
     public void decompile(PrintWriter p, int indent) {
-	doIndent(p, indent);
-	p.print("static ");
-	myType.decompile(p, indent);
-	p.print(" ");
-	myId.decompile(p, indent);
-	p.println(";");
+        p.print("static ");
+        myType.decompile(p, indent);
+        p.print(" ");
+        myId.decompile(p, indent);
+        p.print(";");
     }
 
     // 2 kids
@@ -238,11 +291,15 @@ class FieldDeclNode extends DeclNode {
 
 class VarDeclNode extends DeclNode {
     public VarDeclNode(TypeNode type, IdNode id) {
-	myType = type;
-	myId = id;
+        myType = type;
+        myId = id;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myType.decompile(p, indent);
+        p.print(" ");
+        myId.decompile(p, indent);
+        p.write("; ");
     }
 
     // 2 kids
@@ -251,17 +308,35 @@ class VarDeclNode extends DeclNode {
 }
 
 class MethodDeclNode extends DeclNode {
-    public MethodDeclNode(IdNode id, FormalsListNode formalList,
-			  MethodBodyNode body) {
-	myId = id;
-	myFormalsList = formalList;
-	myBody = body;
+    public MethodDeclNode(TypeNode type, IdNode id, FormalsListNode formalList,
+            MethodBodyNode body) {
+        myReturnType = type;
+        myId = id;
+        myFormalsList = formalList;
+        myBody = body;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        // write decompile function
+        p.print("public ");
+        p.print("static ");
+        myReturnType.decompile(p, indent);
+        p.print(" ");
+        myId.decompile(p, indent);
+        p.print(" ");
+        if (this.myFormalsList == null) {
+            System.out.println("unexpected null myFormalsList in MethodDeclNode.decompile");
+        } else {
+            this.myFormalsList.decompile(p, indent);
+        }
+        p.print(" {");
+        this.myBody.decompile(p, indent);
+        doIndent(p, indent);
+        p.print("}");
     }
 
-    // 3 kids
+    // 4 kids
+    private TypeNode myReturnType; // null for a void return
     private IdNode myId;
     private FormalsListNode myFormalsList;
     private MethodBodyNode myBody;
@@ -269,11 +344,14 @@ class MethodDeclNode extends DeclNode {
 
 class FormalDeclNode extends DeclNode {
     public FormalDeclNode(TypeNode type, IdNode id) {
-	myType = type;
-	myId = id;
+        myType = type;
+        myId = id;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myType.decompile(p, indent);
+        p.write(" ");
+        myId.decompile(p, indent);
     }
 
     // 2 kids
@@ -287,31 +365,38 @@ class FormalDeclNode extends DeclNode {
 abstract class TypeNode extends ASTnode {
 }
 
-class IntNode extends TypeNode
-{
-    public IntNode() {
+class VoidNode extends TypeNode {
+    public VoidNode() {
     }
 
     public void decompile(PrintWriter p, int indent) {
-	p.print("int");
+        p.print("void");
     }
 }
 
-class BooleanNode extends TypeNode
-{
+class IntNode extends TypeNode {
+    public IntNode() {
+    }
+    public void decompile(PrintWriter p, int indent) {
+        p.print("int");
+    }
+}
+
+class BooleanNode extends TypeNode {
     public BooleanNode() {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.print("boolean");
     }
 }
 
-class StringNode extends TypeNode
-{
+class StringNode extends TypeNode {
     public StringNode() {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.print("String");
     }
 }
 
@@ -324,10 +409,13 @@ abstract class StmtNode extends ASTnode {
 
 class PrintStmtNode extends StmtNode {
     public PrintStmtNode(ExpNode exp) {
-	myExp = exp;
+        myExp = exp;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("System.out.println(");
+        myExp.decompile(p, indent);
+        p.write(");");
     }
 
     // 1 kid
@@ -336,11 +424,15 @@ class PrintStmtNode extends StmtNode {
 
 class AssignStmtNode extends StmtNode {
     public AssignStmtNode(IdNode id, ExpNode exp) {
-	myId = id;
-	myExp = exp;
+        myId = id;
+        myExp = exp;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myId.decompile(p, indent);
+        p.write(" = ");
+        myExp.decompile(p, indent);
+        p.write(";");
     }
 
     // 2 kids
@@ -350,11 +442,17 @@ class AssignStmtNode extends StmtNode {
 
 class IfStmtNode extends StmtNode {
     public IfStmtNode(ExpNode exp, StmtListNode slist) {
-	myExp = exp;
-	myStmtList = slist;
+        myExp = exp;
+        myStmtList = slist;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("if ( ");
+        myExp.decompile(p, indent);
+        p.write(" ) {\n");
+        myStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("}");
     }
 
     // 2 kids
@@ -364,13 +462,22 @@ class IfStmtNode extends StmtNode {
 
 class IfElseStmtNode extends StmtNode {
     public IfElseStmtNode(ExpNode exp, StmtListNode slist1,
-			  StmtListNode slist2) {
-	myExp = exp;
-	myThenStmtList = slist1;
-	myElseStmtList = slist2;
+            StmtListNode slist2) {
+        myExp = exp;
+        myThenStmtList = slist1;
+        myElseStmtList = slist2;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("if ( ");
+        myExp.decompile(p, indent);
+        p.write(" ) {\n");
+        myThenStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("} else {\n");
+        myElseStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("}");
     }
 
     // 3 kids
@@ -381,11 +488,17 @@ class IfElseStmtNode extends StmtNode {
 
 class WhileStmtNode extends StmtNode {
     public WhileStmtNode(ExpNode exp, StmtListNode slist) {
-	myExp = exp;
-	myStmtList = slist;
+        myExp = exp;
+        myStmtList = slist;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("do {\n");
+        myStmtList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("} while (");
+        myExp.decompile(p, indent);
+        p.write(");");
     }
 
     // 2 kids
@@ -395,16 +508,19 @@ class WhileStmtNode extends StmtNode {
 
 class CallStmtNode extends StmtNode {
     public CallStmtNode(IdNode id, ExpListNode elist) {
-	myId = id;
-	myExpList = elist;
+        myId = id;
+        myExpList = elist;
     }
 
     public CallStmtNode(IdNode id) {
-	myId = id;
-	myExpList = new ExpListNode(new Sequence());
+        myId = id;
+        myExpList = new ExpListNode(new Sequence());
     }
 
     public void decompile(PrintWriter p, int indent) {
+        myId.decompile(p, indent);
+        myExpList.decompile(p, indent);
+        p.write(";");
     }
 
     // 2 kids
@@ -412,13 +528,72 @@ class CallStmtNode extends StmtNode {
     private ExpListNode myExpList;
 }
 
+class SwitchStmtNode extends StmtNode {
+    private ExpNode myExp;
+    private SwitchGroupListNode myCaseList;
+
+    public SwitchStmtNode(ExpNode exp, SwitchGroupListNode caseList) {
+        myExp = exp;
+        myCaseList = caseList;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.write("switch (");
+        myExp.decompile(p, indent);
+        p.write(") {\n");
+        myCaseList.decompile(p, indent + 2);
+        doIndent(p, indent);
+        p.write("}");
+    }
+}
+
+class SwitchGroupListNode extends ASTnode {
+    public SwitchGroupListNode(Sequence S) {
+        mySwitchGroups = S;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        for ( 
+            mySwitchGroups.start(); mySwitchGroups.isCurrent();) {
+            try {
+                ((CaseStmtNode) mySwitchGroups.getCurrent()).decompile(p, indent);
+                mySwitchGroups.advance();
+            } catch (NoCurrentException ex) {
+                System.err.println("unexpected NoCurrentException in SwitchGroupListNode.print");
+                System.exit(-1);
+            }
+        }
+
+    }
+
+    // sequence of kids (SwitchGroupNodes)
+    private Sequence mySwitchGroups;
+}
+
 class ReturnStmtNode extends StmtNode {
     public ReturnStmtNode() {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("return");
     }
 }
+
+class ReturnExprStmtNode extends StmtNode { //added class
+    ExpNode myExp;
+    public ReturnExprStmtNode(
+        ExpNode exp
+    ) {
+        myExp = exp;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.write("return ");
+        this.myExp.decompile(p, indent);
+        p.write(";");
+    }
+}
+
 
 // **********************************************************************
 // ExpNode and its subclasses
@@ -429,12 +604,13 @@ abstract class ExpNode extends ASTnode {
 
 class IntLitNode extends ExpNode {
     public IntLitNode(int lineNum, int colNum, int intVal) {
-	myLineNum = lineNum;
-	myColNum = colNum;
-	myIntVal = intVal;
+        myLineNum = lineNum;
+        myColNum = colNum;
+        myIntVal = intVal;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(Long.toString(myIntVal));
     }
 
     private int myLineNum;
@@ -444,12 +620,15 @@ class IntLitNode extends ExpNode {
 
 class StringLitNode extends ExpNode {
     public StringLitNode(int lineNum, int colNum, String strVal) {
-	myLineNum = lineNum;
-	myColNum = colNum;
-	myStrVal = strVal;
+        myLineNum = lineNum;
+        myColNum = colNum;
+        myStrVal = strVal;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("\"");
+        p.write(myStrVal);
+        p.write("\"");
     }
 
     private int myLineNum;
@@ -459,11 +638,12 @@ class StringLitNode extends ExpNode {
 
 class TrueNode extends ExpNode {
     public TrueNode(int lineNum, int colNum) {
-	myLineNum = lineNum;
-	myColNum = colNum;
+        myLineNum = lineNum;
+        myColNum = colNum;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("true");
     }
 
     private int myLineNum;
@@ -472,27 +652,27 @@ class TrueNode extends ExpNode {
 
 class FalseNode extends ExpNode {
     public FalseNode(int lineNum, int colNum) {
-	myLineNum = lineNum;
-	myColNum = colNum;
+        myLineNum = lineNum;
+        myColNum = colNum;
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("false");
     }
 
     private int myLineNum;
     private int myColNum;
 }
 
-class IdNode extends ExpNode
-{
+class IdNode extends ExpNode {
     public IdNode(int lineNum, int charNum, String strVal) {
-	myLineNum = lineNum;
-	myCharNum = charNum;
-	myStrVal = strVal;
+        myLineNum = lineNum;
+        myCharNum = charNum;
+        myStrVal = strVal;
     }
 
     public void decompile(PrintWriter p, int indent) {
-	p.print(myStrVal);
+        p.print(myStrVal);
     }
 
     private int myLineNum;
@@ -502,18 +682,17 @@ class IdNode extends ExpNode
 
 abstract class UnaryExpNode extends ExpNode {
     public UnaryExpNode(ExpNode exp) {
-	myExp = exp;
+        myExp = exp;
     }
 
     // one child
     protected ExpNode myExp;
 }
 
-abstract class BinaryExpNode extends ExpNode
-{
+abstract class BinaryExpNode extends ExpNode {
     public BinaryExpNode(ExpNode exp1, ExpNode exp2) {
-	myExp1 = exp1;
-	myExp2 = exp2;
+        myExp1 = exp1;
+        myExp2 = exp2;
     }
 
     // two kids
@@ -525,23 +704,25 @@ abstract class BinaryExpNode extends ExpNode
 // Subclasses of UnaryExpNode
 // **********************************************************************
 
-class UnaryMinusNode extends UnaryExpNode
-{
+class UnaryMinusNode extends UnaryExpNode {
     public UnaryMinusNode(ExpNode exp) {
-	super(exp);
+        super(exp);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("-");
+        this.myExp.decompile(p, indent);
     }
 }
 
-class NotNode extends UnaryExpNode
-{
+class NotNode extends UnaryExpNode {
     public NotNode(ExpNode exp) {
-	super(exp);
+        super(exp);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("!");
+        this.myExp.decompile(p, indent);
     }
 }
 
@@ -549,122 +730,236 @@ class NotNode extends UnaryExpNode
 // Subclasses of BinaryExpNode
 // **********************************************************************
 
-class PlusNode extends BinaryExpNode
-{
+class PlusNode extends BinaryExpNode {
     public PlusNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" (");
+        this.myExp1.decompile(p, indent);
+        p.write(" + ");
+        this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
-class MinusNode extends BinaryExpNode
-{
+class MinusNode extends BinaryExpNode {
     public MinusNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" (");
+        this.myExp1.decompile(p, indent);
+        p.write(" - ");
+        this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
-class TimesNode extends BinaryExpNode
-{
+class TimesNode extends BinaryExpNode {
     public TimesNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" (");
+        this.myExp1.decompile(p, indent);
+        p.write(" * ");
+        this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
-class DivideNode extends BinaryExpNode
-{
+class DivideNode extends BinaryExpNode {
     public DivideNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" (");
+        this.myExp1.decompile(p, indent);
+        p.write(" / ");
+        this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
-class AndNode extends BinaryExpNode
-{
+class AndNode extends BinaryExpNode {
     public AndNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write(" (");
+        this.myExp1.decompile(p, indent);
+        p.write(" && ");
+        this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
-class OrNode extends BinaryExpNode
-{
+class OrNode extends BinaryExpNode {
     public OrNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" || ");
+        this.myExp2.decompile(p, indent);
     }
 }
 
-class EqualsNode extends BinaryExpNode
-{
+class EqualsNode extends BinaryExpNode {
     public EqualsNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" == ");
+        this.myExp2.decompile(p, indent);
+
     }
 }
 
-class NotEqualsNode extends BinaryExpNode
-{
+class NotEqualsNode extends BinaryExpNode {
     public NotEqualsNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" != ");
+        this.myExp2.decompile(p, indent);
     }
 }
 
-class LessNode extends BinaryExpNode
-{
+class LessNode extends BinaryExpNode {
     public LessNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" < ");
+        this.myExp2.decompile(p, indent);
     }
 }
 
-class GreaterNode extends BinaryExpNode
-{
+class GreaterNode extends BinaryExpNode {
     public GreaterNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" > ");
+        this.myExp2.decompile(p, indent);
     }
 }
 
-class LessEqNode extends BinaryExpNode
-{
+class LessEqNode extends BinaryExpNode {
     public LessEqNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
+
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" <= ");
+        this.myExp2.decompile(p, indent);
     }
 }
 
-class GreaterEqNode extends BinaryExpNode
-{
+class GreaterEqNode extends BinaryExpNode {
     public GreaterEqNode(ExpNode exp1, ExpNode exp2) {
-	super(exp1, exp2);
+        super(exp1, exp2);
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.myExp1.decompile(p, indent);
+        p.write(" >= ");
+        this.myExp2.decompile(p, indent);
+    }
+}
+
+class EmptyExprNode extends ExpNode {
+    public EmptyExprNode() {
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        // do nothing -- represents an empty expression
+    }
+}
+
+class CallExprNode extends ExpNode {
+    public CallExprNode(IdNode id, ExpListNode elist) {
+        myId = id;
+        myExpList = elist;
+    }
+
+    public CallExprNode(IdNode id) {
+        myId = id;
+        myExpList = new ExpListNode(new Sequence());
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        myId.decompile(p, indent);
+        myExpList.decompile(p, indent);
+    }
+
+    // 2 kids
+    private IdNode myId;
+    private ExpListNode myExpList;
+}
+
+class ParenthesizedExpNode extends ExpNode {
+    public ParenthesizedExpNode(ExpNode exp) {
+        myExp = exp;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.write("(");
+        myExp.decompile(p, indent);
+        p.write(")");
+    }
+
+    // 1 kid
+    private ExpNode myExp;
+}
+
+class CaseStmtNode extends StmtNode {
+    private ExpNode myCaseExpr;
+    private StmtListNode myStmtList;
+
+    public CaseStmtNode(ExpNode caseValue, StmtListNode stmtList) {
+        myCaseExpr = caseValue;
+        myStmtList = stmtList;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        if (myCaseExpr== null) {
+            doIndent(p, indent);
+            p.write("default");
+            p.write(",\n");
+            myStmtList.decompile(p, indent + 2);
+            doIndent(p, indent + 2);
+            p.println(); 
+
+
+        } else {
+            doIndent(p, indent);
+            p.write("case ");
+            myCaseExpr.decompile(p, indent);
+            p.write(",\n");
+            myStmtList.decompile(p, indent + 2);
+            doIndent(p, indent + 2);
+            p.println(); 
+
+        }
+
     }
 }
