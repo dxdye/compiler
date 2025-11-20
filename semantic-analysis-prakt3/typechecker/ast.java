@@ -197,7 +197,7 @@ class FormalsListNode extends ASTnode {
     private Sequence myFormals;
 }
 
-class MethodBodyNode extends ASTnode {
+class MethodBodyNode extends StmtNode {
     public MethodBodyNode(DeclListNode declList, StmtListNode stmtList) {
         myDeclList = declList;
         myStmtList = stmtList;
@@ -806,9 +806,11 @@ class OrNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" || ");
         this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
@@ -818,9 +820,11 @@ class EqualsNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" == ");
         this.myExp2.decompile(p, indent);
+        p.write(") ");
 
     }
 }
@@ -831,9 +835,11 @@ class NotEqualsNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" != ");
         this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
@@ -843,9 +849,11 @@ class LessNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" < ");
         this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
@@ -855,9 +863,11 @@ class GreaterNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" > ");
         this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
@@ -868,9 +878,11 @@ class LessEqNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" <= ");
         this.myExp2.decompile(p, indent);
+        p.write(") ");
     }
 }
 
@@ -880,9 +892,11 @@ class GreaterEqNode extends BinaryExpNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        p.write("(");
         this.myExp1.decompile(p, indent);
         p.write(" >= ");
         this.myExp2.decompile(p, indent);
+        p.write(")");
     }
 }
 

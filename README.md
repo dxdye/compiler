@@ -3,17 +3,18 @@
 This is an implementation of a compiler for the so-called 'simple'-language.
 
 It implements a:
-> frontend, lexer: it identifies tokens via Regex
-> frontend, parser: it will build an AST from the lexed tokens - it's able to decompile the original into 
+- frontend, lexer: it identifies tokens via Regex
+- frontend, parser: it will build an AST from the lexed tokens - it's able to decompile the original into 
 
 ToDo: 
-> frontend: name- and type- checking 
-> backend: assembler code generation
+- frontend: name- and type- checking 
+- backend: assembler code generation
+- backend: linker
 
 # Structure
 
 The project consists of sub-projects, which store redundant 
-deps and .jlex and jcup-specs. For the reviewer of this project, 
+deps and .jlex and .jcup-specifications. For the reviewer of this project, 
 the progress of this compiler build will be recognizable. 
 
 
@@ -26,7 +27,7 @@ It is part of the frontend.
 # Parser 
 
 It builds a so-called abstract syntax tree, which supports a context free grammar. 
-The grammar rules are simplified via the ruleset in the simple.cup (critical utilization pattern), 
+The grammar rules are simplified via the rule set in the simple.cup (critical utilization pattern), 
 which builds and executes a Push-Down Automata two parse the tree. While the grammer is fitted onto 
 the lexed tokens, the Node type and accurate decompile function are matched and created. 
 

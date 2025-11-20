@@ -1,0 +1,120 @@
+public class CorrectTest {
+	// Klassen Variablen
+	static int x;
+	static int y;
+	static int z;
+
+	static String x_str;
+	static String y_str;
+	static String z_str;
+
+	static boolean x_bool;
+	static boolean y_bool;
+	static boolean z_bool;
+
+	public static void bool_Test(boolean b1, boolean b2) {
+		if(b1 && b2){
+		z_bool = b1;
+		}
+		if(b1 || b2){
+		z_bool = b2;
+		}
+		if (x == y) {
+        z_bool = ! b1;
+        } else {
+		z_bool = ! b2;
+		}
+		if (y != z) {
+        z_bool = true;
+        }
+		if (1<2) {
+		if (3>4) {
+		z_bool = false;
+        }
+        }
+		if (5<=6) {
+		if (7>=8) {
+		z_bool = z_bool;
+        }
+        }
+	}
+
+	public static void String_test(){
+		String z_str;
+		z_str = "asflkhjhlASDFasfIÖHJHjahfkjhaskjfdhaJKLSFJKASGDFJHXCHBNGMKHJERKIGTNSKDFHGUIHasdfghjklöoiiuztrewq<yxcvbnm,gckhcghj";
+		y_str = z_str;
+		{
+			String z_str;
+			z_str = "Ich bin ein Nested_Block";
+			x_str = z_str;
+		}
+    }
+
+	public static int math_test(int input) {
+	x = 1 + 1;
+	y = 5 - 4;
+	z = x * y;
+	x = input / z;
+	y = input ** x;
+	z = 100 + 2 ** 2 - 5;
+    x = 100 + 5 % 102;
+    y = (100 + 5) % 102;
+	input = x + y;
+	return input;
+	}
+
+	public static void paramTest(int param_int, String param_str, boolean param_bool){
+	}
+
+	// Main mit Parametern
+	public static void main(int param_int, String param_str, boolean param_bool) {
+		// lokale Variable
+		boolean result;
+		int i;
+		String testing;
+		int switch_val;
+
+		// Zuweisung
+		result = false;
+		i = 0;
+		testing = "Es SOLLTEN keine Fehler in der Datei auftreten.";
+
+		x_bool = false;
+		y_bool = true;
+
+		// Aufrufe
+		switch_val = math_test(z);
+		String_test();
+		bool_Test(x_bool, y_bool);
+		paramTest(x, x_str, x_bool);
+
+		// While Schleife
+		do {
+            i = i + 1;
+        } while (i < 1000)
+
+		//switch mit print Statement
+		switch (switch_val) {
+            case 10:
+                System.out.println("I am finished with int 10");
+            case - -100:
+                System.out.println("I am finished with int 100");
+			case 100 - 10:
+                System.out.println("I am finished with int 90");
+			case 5 * 5:
+				System.out.println("I am finished with int 25");
+			case 1 + 1:
+				System.out.println("I am finished with int 2");
+			case 5 / 5:
+				System.out.println("I am finished with int 1");
+			case 3 ** 3:
+				System.out.println("I am finished with int 27");
+			case 100 % 70:
+				System.out.println("I am finished with int 30");
+            case 100 + 70560 * 5 / 70 - 80 + 1 + -7000 * 7:
+                System.out.println("I didn't crash");
+            default :
+                System.out.println("I am finished with the default");
+        }
+	}
+}

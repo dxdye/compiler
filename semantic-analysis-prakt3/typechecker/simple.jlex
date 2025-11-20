@@ -523,25 +523,23 @@ ILLEGAL_STRING_CHAR = [#&\^]
 
 <BLOCKCOMMENT><<EOF>> {
 		Errors.fatal(yyline+1, CharNum.num,"Unterminated comment at EOF");
-		yybegin(YYINITIAL); // Return to the initial state
+		yybegin(YYINITIAL); 
 }   
 
 /* rules for Single Line Comment */
 
 <YYINITIAL>"//" {
-			yybegin( SLCOMMENT);
+			yybegin(SLCOMMENT);
 			CharNum.num += 2;
 }
 
 <SLCOMMENT> \n {
-				System.out.println("End of single-line comment"); //can't figure out why not working!!!!1 is test.sim corrupted??
-				//cat -A test.sim shows new line character
+				System.out.println("End of single-line comment");
 				CharNum.num += yytext().length(); // Consume the newline character
 				yybegin(YYINITIAL);
 }	
 
 <SLCOMMENT>. {
-		System.out.println("Matched character in comment: " + yytext()); 
 		CharNum.num += yytext().length(); // Consume charcters in single-line comment
 }
 
