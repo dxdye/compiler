@@ -673,6 +673,7 @@ class IdNode extends ExpNode {
 
     public void decompile(PrintWriter p, int indent) {
         p.print(myStrVal);
+        System.out.println(myCharNum + "  " + myLineNum);
     }
 
     private int myLineNum;

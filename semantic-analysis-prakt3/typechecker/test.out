@@ -48,7 +48,7 @@ public class CorrectTest {
 
     x =  ( ( ( (1 + 1)  + 3)  + 4)  +  (5 - 7) ) ;
     y =  (5 - 4) ;
-    z =  (x * y) ;
+    z =  ( (x * y)  / 7) ;
     x =  (input / z) ;
     y =  (input * x) ;
     z =  (100 +  (2 *  (2 - 5) ) ) ;
@@ -74,7 +74,7 @@ public class CorrectTest {
     bool_Test(x_bool, y_bool);
     paramTest(x, x_str, x_bool);
     do {
-      i =  (i + 1) ;
+      i =  (i +  ( ( ( (1 * 3)  * 2)  / 3)  *  (7 - 0) ) ) ;
     } while ((i < 1000) );
     switch (switch_val) {
       case 10,
