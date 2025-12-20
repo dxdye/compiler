@@ -12,6 +12,32 @@ CLASSPATH =  .:../jars/java-cup-11b-runtime.jar
 JARFILE = ../jars/java-cup-11b.jar
 FLAGS = -g -cp $(CLASSPATH)
 
+# Default target
+all: P4.class
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  make              - Build the compiler (default)"
+	@echo "  make all          - Build the compiler"
+	@echo "  make clean        - Remove generated .class and .java files"
+	@echo "  make clean-tests  - Remove test output files"
+	@echo "  make clean-all    - Remove all generated files"
+	@echo ""
+	@echo "Test targets:"
+	@echo "  make test              - Run basic test"
+	@echo "  make test-simple       - Test simple correct program"
+	@echo "  make test-comprehensive - Test comprehensive program"
+	@echo "  make test-name-errors  - Test name error detection"
+	@echo "  make test-type-errors  - Test type error detection"
+	@echo "  make test-correct      - Run all correct program tests"
+	@echo "  make test-errors       - Run all error detection tests"
+	@echo "  make test-all          - Run ALL tests"
+	@echo ""
+	@echo "Other targets:"
+	@echo "  make submit       - Create submission zip"
+	@echo "  make handout      - Create handout zip"
+
 P4.class: P4.java parser.class Yylex.class ASTnode.class IO.class
 	javac $(FLAGS) P4.java
 
@@ -60,10 +86,81 @@ IO.class: IO.java
 clean:
 	rm -f *~ *.class parser.java simple.jlex.java
 
+###
+# test targets
+###
+
+# Single test target (existing)
 test:	test.sim P4.class 
 	@echo "If you get an error below your Parser does not work yet!"
 	@echo "Modify the simple.cup specification to implement the language!"
 	java -cp $(CLASSPATH) P4 test.sim test.out
+
+# Test with simple correct program
+test-simple: simple_correct.sim P4.class
+	@echo "=========================================="
+	@echo "Testing: simple_correct.sim (should pass)"
+	@echo "=========================================="
+	java -cp $(CLASSPATH) P4 simple_correct.sim simple_correct.out
+	@echo ""
+
+# Test with comprehensive program
+test-comprehensive: comprehensive_test.sim P4.class
+	@echo "=========================================="
+	@echo "Testing: comprehensive_test.sim (should pass)"
+	@echo "=========================================="
+	java -cp $(CLASSPATH) P4 comprehensive_test.sim comprehensive_test.out
+	@echo ""
+
+# Test name errors (should fail name checking)
+test-name-errors: test_name_error.sim P4.class
+	@echo "=========================================="
+	@echo "Testing: test_name_error.sim (should fail name checking)"
+	@echo "=========================================="
+	-java -cp $(CLASSPATH) P4 test_name_error.sim test_name_error.out
+	@echo ""
+
+# Test type errors (should fail type checking)
+test-type-errors: test_type_error.sim P4.class
+	@echo "=========================================="
+	@echo "Testing: test_type_error.sim (should fail type checking)"
+	@echo "=========================================="
+	-java -cp $(CLASSPATH) P4 test_type_error.sim test_type_error.out
+	@echo ""
+
+# Test with type example (has errors)
+test-type-example: type_example.sim P4.class
+	@echo "=========================================="
+	@echo "Testing: type_example.sim (should fail type checking)"
+	@echo "=========================================="
+	-java -cp $(CLASSPATH) P4 type_example.sim type_example.out
+	@echo ""
+
+# Test all correct programs
+test-correct: test-simple test-comprehensive
+	@echo "=========================================="
+	@echo "All correct tests completed"
+	@echo "=========================================="
+
+# Test all error-detecting programs
+test-errors: test-name-errors test-type-errors test-type-example
+	@echo "=========================================="
+	@echo "All error detection tests completed"
+	@echo "=========================================="
+
+# Run all tests
+test-all: test-correct test-errors
+	@echo "=========================================="
+	@echo "ALL TESTS COMPLETED"
+	@echo "=========================================="
+
+# Clean test output files
+clean-tests:
+	rm -f *.out
+
+# Clean everything including tests
+clean-all: clean clean-tests
+	@echo "Cleaned all generated files and test outputs"
 
 ###
 # submit
