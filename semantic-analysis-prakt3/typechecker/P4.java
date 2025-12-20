@@ -1,4 +1,7 @@
 import java.io.*;
+import java.util.Hashtable;
+import java.util.LinkedList;
+
 import java_cup.runtime.*;
 
 // **********************************************************************
@@ -14,7 +17,7 @@ import java_cup.runtime.*;
 
 // shut up message about parser creation
 @SuppressWarnings("deprecation")
-public class P3 {
+public class P4 {
   public static void main(String[] args)
       throws IOException // may be thrown by the scanner
   {
@@ -44,6 +47,9 @@ public class P3 {
 
     parser P = new parser();
     P.setScanner(new Yylex(inFile));
+
+    // symbol
+    // tables
 
     Symbol root = null; // the parser will return a Symbol whose value
                         // field's type is the type associated with the

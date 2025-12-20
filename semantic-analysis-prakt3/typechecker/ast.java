@@ -1,5 +1,7 @@
 import java.io.*;
 
+import java.util.LinkedList;
+
 // **********************************************************************
 // The ASTnode class defines the nodes of the abstract-syntax tree that
 // represents a "Simple" program.
@@ -95,8 +97,43 @@ import java.io.*;
 // **********************************************************************
 // ASTnode class (base class for all other kinds of nodes)
 // **********************************************************************
+
 abstract class ASTnode {
+    private int scope = 0;
+
+    public void printSymbolTables() {
+        System.out.println("Try to print Symboltable:");
+        for (SymbolTable st : hierarchalSymbolTable) {
+            System.out.println("Symbol Table:");
+            for (var key : st.table.keySet()) {
+                System.out.println("  " + key + " : " + st.lookup(key).toString());
+            }
+        }
+    }
+
+    LinkedList<SymbolTable> hierarchalSymbolTable = new LinkedList<>(); // implicit hierarchy of
     // every subclass must provide an decompile operation
+
+    public LinkedList<SymbolTable> getSymbolTable() {
+        return this.hierarchalSymbolTable;
+    }
+
+    public void increaseScopeCount(int scope) {
+        this.scope += scope + 1;
+    }
+
+    public int getScopeCount() {
+        return this.scope;
+    }
+
+    public int setScopeCount(int scope) {
+        return this.scope = scope;
+    }
+
+    public void passSymbolTable(LinkedList<SymbolTable> st) {
+        this.hierarchalSymbolTable = st;
+    }
+
     abstract public void decompile(PrintWriter p, int indent);
 
     // this method can be used by the decompile methods to do indenting
@@ -117,11 +154,20 @@ class ProgramNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        this.hierarchalSymbolTable = new LinkedList<>();
+        this.hierarchalSymbolTable.add(new SymbolTable());
+        this.hierarchalSymbolTable.getLast().insertFull(myId.getNameOfId(), "Class");
+        // pass symbol table to class body
+        myClassBody.passSymbolTable(hierarchalSymbolTable);
+
         System.out.println("ProgramNode write");
         p.print("public class ");
+
         myId.decompile(p, 0);
         p.println(" {");
         myClassBody.decompile(p, 0);
+        myClassBody.increaseScopeCount(this.getScopeCount());
+
         p.println("}");
     }
 
@@ -136,6 +182,11 @@ class ClassBodyNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+        // pass symbol table to decl list
+        myDeclList.passSymbolTable(hierarchalSymbolTable);
+
+        myDeclList.setScopeCount(this.getScopeCount());
+
         myDeclList.decompile(p, indent + 2);
     }
 
@@ -150,15 +201,45 @@ class DeclListNode extends ASTnode {
 
     public void decompile(PrintWriter p, int indent) {
         try {
+            System.out.println("Length of List: " + this.hierarchalSymbolTable.size());
             for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
                 doIndent(p, indent);
-                ((DeclNode) myDecls.getCurrent()).decompile(p, indent);
+                var currentDecl = (DeclNode) myDecls.getCurrent();
+
+                System.out.println("Class of currentDecl: " + currentDecl.getClass().toString());
+                if ( currentDecl.getClass() == MethodDeclNode.class) {
+                    currentDecl.passSymbolTable(hierarchalSymbolTable);
+
+                    String methodName = ((MethodDeclNode) currentDecl).getId().getNameOfId();
+                    String returnType = ((MethodDeclNode) currentDecl).getReturnType().getTypeName();
+                    String argsTypes = ((MethodDeclNode) currentDecl).getFormalsList().typesToString();  
+
+                    this.hierarchalSymbolTable.getLast().insertFull(methodName, "(" + argsTypes + ") -> " + returnType);
+                }
+                if (currentDecl.getClass() == VarDeclNode.class) {
+                    currentDecl.passSymbolTable(hierarchalSymbolTable);
+
+                    String varName = ((VarDeclNode) currentDecl).getId().getNameOfId();
+                    String typeName = ((VarDeclNode) currentDecl).getType().getTypeName();
+                    //this.hierarchalSymbolTable.getLast().insertFull(varName, (typeName));
+                }
+                if (currentDecl.getClass() == FieldDeclNode.class) {
+                    currentDecl.passSymbolTable(hierarchalSymbolTable);
+
+                    String varName = ((FieldDeclNode) currentDecl).getId().getNameOfId();
+                    String typeName = ((FieldDeclNode) currentDecl).getType().getTypeName();
+                    this.hierarchalSymbolTable.getLast().insertFull(varName, typeName);
+                }
+
+                currentDecl.decompile(p, indent);
                 p.write("\n");
             }
+            printSymbolTables();
         } catch (NoCurrentException ex) {
             System.err.println("unexpected NoCurrentException in DeclListNode.print");
             System.exit(-1);
         }
+
     }
 
     // sequence of kids (DeclNodes)
@@ -168,6 +249,29 @@ class DeclListNode extends ASTnode {
 class FormalsListNode extends ASTnode {
     public FormalsListNode(Sequence S) {
         myFormals = S;
+    }
+    public String typesToString() {
+        StringBuilder sb = new StringBuilder();
+        try {
+            this.hierarchalSymbolTable.add(new SymbolTable());
+            for (myFormals.start(); myFormals.isCurrent();) {
+
+                FormalDeclNode formal = (FormalDeclNode) myFormals.getCurrent();
+
+                // add to symbol table
+                this.hierarchalSymbolTable.getLast().insertFull(formal.getId().getNameOfId(), formal.getType().getTypeName());
+
+                sb.append(formal.getType().getTypeName());
+                myFormals.advance();
+                if (myFormals.isCurrent()) {
+                    sb.append(", ");
+                }
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in FormalsListNode.typesToString");
+            System.exit(-1);
+        }
+        return sb.toString();
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -204,6 +308,7 @@ class MethodBodyNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
+
         p.write("\n");
         myDeclList.decompile(p, indent + 2);
         p.write("\n");
@@ -284,6 +389,15 @@ class FieldDeclNode extends DeclNode {
         p.print(";");
     }
 
+
+    public TypeNode getType() {
+        return myType;
+    }
+
+    public IdNode getId() {
+        return myId;
+    }
+
     // 2 kids
     private TypeNode myType;
     private IdNode myId;
@@ -302,6 +416,14 @@ class VarDeclNode extends DeclNode {
         p.write("; ");
     }
 
+    public TypeNode getType() {
+        return myType;
+    }
+
+    public IdNode getId() {
+        return myId;
+    }
+
     // 2 kids
     private TypeNode myType;
     private IdNode myId;
@@ -316,6 +438,15 @@ class MethodDeclNode extends DeclNode {
         myBody = body;
     }
 
+    public IdNode getId() {
+        return myId;
+    }
+    public TypeNode getReturnType() {
+        return myReturnType;
+    }
+    public FormalsListNode getFormalsList() {
+        return myFormalsList;
+    }
     public void decompile(PrintWriter p, int indent) {
         // write decompile function
         p.print("public ");
@@ -327,6 +458,7 @@ class MethodDeclNode extends DeclNode {
         if (this.myFormalsList == null) {
             System.out.println("unexpected null myFormalsList in MethodDeclNode.decompile");
         } else {
+            this.passSymbolTable(hierarchalSymbolTable);
             this.myFormalsList.decompile(p, indent);
         }
         p.print(" {");
@@ -348,6 +480,13 @@ class FormalDeclNode extends DeclNode {
         myId = id;
     }
 
+    public TypeNode getType() {
+        return myType;
+    }
+    public IdNode getId() {
+        return myId;
+    }
+
     public void decompile(PrintWriter p, int indent) {
         myType.decompile(p, indent);
         p.write(" ");
@@ -363,10 +502,15 @@ class FormalDeclNode extends DeclNode {
 // TypeNode and its Subclasses
 // **********************************************************************
 abstract class TypeNode extends ASTnode {
+    public abstract String getTypeName();
 }
 
 class VoidNode extends TypeNode {
     public VoidNode() {
+    }
+
+    public String getTypeName() {
+        return "void";
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -377,8 +521,13 @@ class VoidNode extends TypeNode {
 class IntNode extends TypeNode {
     public IntNode() {
     }
+
     public void decompile(PrintWriter p, int indent) {
         p.print("int");
+    }
+
+    public String getTypeName() {
+        return "int";
     }
 }
 
@@ -389,6 +538,10 @@ class BooleanNode extends TypeNode {
     public void decompile(PrintWriter p, int indent) {
         p.print("boolean");
     }
+
+    public String getTypeName() {
+        return "boolean";
+    }
 }
 
 class StringNode extends TypeNode {
@@ -397,6 +550,10 @@ class StringNode extends TypeNode {
 
     public void decompile(PrintWriter p, int indent) {
         p.print("String");
+    }
+
+    public String getTypeName() {
+        return "String";
     }
 }
 
@@ -553,8 +710,7 @@ class SwitchGroupListNode extends ASTnode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        for ( 
-            mySwitchGroups.start(); mySwitchGroups.isCurrent();) {
+        for (mySwitchGroups.start(); mySwitchGroups.isCurrent();) {
             try {
                 ((CaseStmtNode) mySwitchGroups.getCurrent()).decompile(p, indent);
                 mySwitchGroups.advance();
@@ -579,11 +735,11 @@ class ReturnStmtNode extends StmtNode {
     }
 }
 
-class ReturnExprStmtNode extends StmtNode { //added class
+class ReturnExprStmtNode extends StmtNode { // added class
     ExpNode myExp;
+
     public ReturnExprStmtNode(
-        ExpNode exp
-    ) {
+            ExpNode exp) {
         myExp = exp;
     }
 
@@ -593,7 +749,6 @@ class ReturnExprStmtNode extends StmtNode { //added class
         p.write(";");
     }
 }
-
 
 // **********************************************************************
 // ExpNode and its subclasses
@@ -665,10 +820,15 @@ class FalseNode extends ExpNode {
 }
 
 class IdNode extends ExpNode {
+
     public IdNode(int lineNum, int charNum, String strVal) {
         myLineNum = lineNum;
         myCharNum = charNum;
         myStrVal = strVal;
+    }
+
+    public String getNameOfId() {
+        return myStrVal;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -956,14 +1116,13 @@ class CaseStmtNode extends StmtNode {
     }
 
     public void decompile(PrintWriter p, int indent) {
-        if (myCaseExpr== null) {
+        if (myCaseExpr == null) {
             doIndent(p, indent);
             p.write("default");
             p.write(",\n");
             myStmtList.decompile(p, indent + 2);
             doIndent(p, indent + 2);
-            p.println(); 
-
+            p.println();
 
         } else {
             doIndent(p, indent);
@@ -972,7 +1131,7 @@ class CaseStmtNode extends StmtNode {
             p.write(",\n");
             myStmtList.decompile(p, indent + 2);
             doIndent(p, indent + 2);
-            p.println(); 
+            p.println();
 
         }
 

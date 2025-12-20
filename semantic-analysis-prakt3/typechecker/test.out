@@ -7,101 +7,11 @@ public class CorrectTest {
   static String z_str;
   static boolean x_bool;
   static boolean y_bool;
-  static boolean z_bool;
-  public static void bool_Test (boolean b1, boolean b2) {
+  static boolean x_bool;
+  public static void main (String w, String v) {
+    int a; 
+    String b; 
+    boolean c; 
 
-    if (  (b1 && b2)  ) {
-      z_bool = b1;
-    }
-    if ( (b1 || b2)  ) {
-      z_bool = b2;
-    }
-    if ( (x == y)  ) {
-      z_bool = !b1;
-    } else {
-      z_bool = !b2;
-    }
-    if ( (y != z)  ) {
-      z_bool = true;
-    }
-    if ( (1 < 2)  ) {
-      if ( (3 > 4)  ) {
-        z_bool = false;
-      }
-    }
-    if ( (5 <= 6)  ) {
-      if ( (7 >= 8) ) {
-        z_bool = z_bool;
-      }
-    }
-  }
-  public static void String_test () {
-    String z_str; 
-
-    z_str = "asflkhjhlASDFasfIÖHJH   jahfkjhaskjfdhaJKLSFJKASGDFJHXCHBNGMKHJERKIGTNSKDFHGUIHasdfghjklöoiiuztrewq<yxcvbnm,gckhcghj";
-    y_str = z_str;
-    
-
-
-  }
-  public static int math_test (int input) {
-
-    x =  ( ( ( (1 + 1)  + 3)  + 4)  +  (5 - 7) ) ;
-    y =  (5 - 4) ;
-    z =  ( (x * y)  / 7) ;
-    x =  (input / z) ;
-    y =  (input * x) ;
-    z =  (100 +  (2 *  (2 - 5) ) ) ;
-    input =  (x + y) ;
-    return input;
-  }
-  public static void paramTest (int param_int, String param_str, boolean param_bool) {
-
-  }
-  public static void main (int param_int, String param_str, boolean param_bool) {
-    boolean result; 
-    int i; 
-    String testing; 
-    int switch_val; 
-
-    result = false;
-    i = 0;
-    testing = "Es SOLLTEN keine Fehler in der Datei auftreten.";
-    x_bool = false;
-    y_bool = true;
-    switch_val = math_test(z);
-    String_test();
-    bool_Test(x_bool, y_bool);
-    paramTest(x, x_str, x_bool);
-    do {
-      i =  (i +  ( ( ( (1 * 3)  * 2)  / 3)  *  (7 - 0) ) ) ;
-    } while ((i < 1000) );
-    switch (switch_val) {
-      case 10,
-        System.out.println("I am finished with int 10");
-        
-      case --100,
-        System.out.println("I am finished with int 100");
-        
-      case  (100 - 10) ,
-        System.out.println("I am finished with int 90");
-        
-      case  (5 * 5) ,
-        System.out.println("I am finished with int 25");
-        
-      case  (1 + 1) ,
-        System.out.println("I am finished with int 2");
-        
-      case  (5 / 5) ,
-        System.out.println("I am finished with int 1");
-        
-      case  (3 * 3) ,
-        System.out.println("I am finished with int 27");
-        System.out.println("I didn't crash");
-        
-      default,
-        System.out.println("I am finished with the default");
-        
-    }
   }
 }

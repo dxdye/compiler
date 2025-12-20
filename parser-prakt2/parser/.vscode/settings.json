@@ -1,5 +1,4 @@
 {
-    "java.project.referencedLibraries": [
-      "../jars/**/*.jar"
-    ]
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2
 }
