@@ -1,6 +1,5 @@
 import java.io.*;
-
-import java.util.LinkedList;
+import java.util.*;
 
 // **********************************************************************
 // The ASTnode class defines the nodes of the abstract-syntax tree that
@@ -99,49 +98,50 @@ import java.util.LinkedList;
 // **********************************************************************
 
 abstract class ASTnode {
-    private int scope = 0;
-
-    public void printSymbolTables() {
-        System.out.println("Try to print Symboltable:");
-        for (SymbolTable st : hierarchalSymbolTable) {
-            System.out.println("Symbol Table:");
-            for (var key : st.table.keySet()) {
-                System.out.println("  " + key + " : " + st.lookup(key).toString());
-            }
-        }
+    protected SymbolTable symbolTable; // Symbol table for this node's scope
+    protected DataType myType = DataType.VOID; // Type of this node (for expressions)
+    protected boolean hasErrors = false; // Track if errors occurred
+    
+    // Set the symbol table for this node
+    public void setSymbolTable(SymbolTable st) {
+        this.symbolTable = st;
     }
-
-    LinkedList<SymbolTable> hierarchalSymbolTable = new LinkedList<>(); // implicit hierarchy of
-    // every subclass must provide an decompile operation
-
-    public LinkedList<SymbolTable> getSymbolTable() {
-        return this.hierarchalSymbolTable;
+    
+    public SymbolTable getSymbolTable() {
+        return this.symbolTable;
     }
-
-    public void increaseScopeCount(int scope) {
-        this.scope += scope + 1;
+    
+    public DataType getType() {
+        return myType;
     }
-
-    public int getScopeCount() {
-        return this.scope;
+    
+    public void setType(DataType type) {
+        this.myType = type;
     }
-
-    public int setScopeCount(int scope) {
-        return this.scope = scope;
+    
+    // Name checking: build symbol table and check for name errors
+    // Returns true if no errors, false otherwise
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        return true; // default: no errors
     }
-
-    public void passSymbolTable(LinkedList<SymbolTable> st) {
-        this.hierarchalSymbolTable = st;
+    
+    // Type checking: verify type correctness
+    // Returns true if no errors, false otherwise
+    public boolean typecheck() {
+        return true; // default: no errors
     }
-
+    
+    // Decompile operation (existing method)
     abstract public void decompile(PrintWriter p, int indent);
 
-    // this method can be used by the decompile methods to do indenting
+    // Helper method for indenting
     protected void doIndent(PrintWriter p, int indent) {
         for (int k = 0; k < indent; k++)
             p.print(" ");
     }
 }
+
 
 // **********************************************************************
 // ProgramNode, ClassBodyNode, DeclListNode, FormalsListNode,
@@ -153,21 +153,41 @@ class ProgramNode extends ASTnode {
         myClassBody = classBody;
     }
 
-    public void decompile(PrintWriter p, int indent) {
-        this.hierarchalSymbolTable = new LinkedList<>();
-        this.hierarchalSymbolTable.add(new SymbolTable());
-        this.hierarchalSymbolTable.getLast().insertFull(myId.getNameOfId(), "Class");
-        // pass symbol table to class body
-        myClassBody.passSymbolTable(hierarchalSymbolTable);
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        // Add class name to symbol table
+        String className = myId.getNameOfId();
+        SymbolTable.SymbolInfo classInfo = new SymbolTable.SymbolInfo(
+            className, myId.getLineNum(), myId.getCharNum()
+        );
+        
+        if (!st.addSymbol(className, classInfo)) {
+            Errors.fatal(myId.getLineNum(), myId.getCharNum(),
+                "Duplicate class name: " + className);
+            noErrors = false;
+        }
+        
+        // Name check the class body with the same symbol table
+        noErrors = myClassBody.namecheck(st) && noErrors;
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Type check the class body
+        return myClassBody.typecheck();
+    }
 
+    public void decompile(PrintWriter p, int indent) {
         System.out.println("ProgramNode write");
         p.print("public class ");
-
         myId.decompile(p, 0);
         p.println(" {");
         myClassBody.decompile(p, 0);
-        myClassBody.increaseScopeCount(this.getScopeCount());
-
         p.println("}");
     }
 
@@ -180,13 +200,20 @@ class ClassBodyNode extends ASTnode {
     public ClassBodyNode(DeclListNode declList) {
         myDeclList = declList;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        // Pass the symbol table to declarations
+        return myDeclList.namecheck(st);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        return myDeclList.typecheck();
+    }
 
     public void decompile(PrintWriter p, int indent) {
-        // pass symbol table to decl list
-        myDeclList.passSymbolTable(hierarchalSymbolTable);
-
-        myDeclList.setScopeCount(this.getScopeCount());
-
         myDeclList.decompile(p, indent + 2);
     }
 
@@ -198,48 +225,54 @@ class DeclListNode extends ASTnode {
     public DeclListNode(Sequence S) {
         myDecls = S;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                DeclNode decl = (DeclNode) myDecls.getCurrent();
+                noErrors = decl.namecheck(st) && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in DeclListNode.namecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                DeclNode decl = (DeclNode) myDecls.getCurrent();
+                noErrors = decl.typecheck() && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in DeclListNode.typecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         try {
-            System.out.println("Length of List: " + this.hierarchalSymbolTable.size());
             for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
                 doIndent(p, indent);
-                var currentDecl = (DeclNode) myDecls.getCurrent();
-
-                System.out.println("Class of currentDecl: " + currentDecl.getClass().toString());
-                if ( currentDecl.getClass() == MethodDeclNode.class) {
-                    currentDecl.passSymbolTable(hierarchalSymbolTable);
-
-                    String methodName = ((MethodDeclNode) currentDecl).getId().getNameOfId();
-                    String returnType = ((MethodDeclNode) currentDecl).getReturnType().getTypeName();
-                    String argsTypes = ((MethodDeclNode) currentDecl).getFormalsList().typesToString();  
-
-                    this.hierarchalSymbolTable.getLast().insertFull(methodName, "(" + argsTypes + ") -> " + returnType);
-                }
-                if (currentDecl.getClass() == VarDeclNode.class) {
-                    currentDecl.passSymbolTable(hierarchalSymbolTable);
-
-                    String varName = ((VarDeclNode) currentDecl).getId().getNameOfId();
-                    String typeName = ((VarDeclNode) currentDecl).getType().getTypeName();
-                    //this.hierarchalSymbolTable.getLast().insertFull(varName, (typeName));
-                }
-                if (currentDecl.getClass() == FieldDeclNode.class) {
-                    currentDecl.passSymbolTable(hierarchalSymbolTable);
-
-                    String varName = ((FieldDeclNode) currentDecl).getId().getNameOfId();
-                    String typeName = ((FieldDeclNode) currentDecl).getType().getTypeName();
-                    this.hierarchalSymbolTable.getLast().insertFull(varName, typeName);
-                }
-
+                DeclNode currentDecl = (DeclNode) myDecls.getCurrent();
                 currentDecl.decompile(p, indent);
                 p.write("\n");
             }
-            printSymbolTables();
         } catch (NoCurrentException ex) {
             System.err.println("unexpected NoCurrentException in DeclListNode.print");
             System.exit(-1);
         }
-
     }
 
     // sequence of kids (DeclNodes)
@@ -250,32 +283,60 @@ class FormalsListNode extends ASTnode {
     public FormalsListNode(Sequence S) {
         myFormals = S;
     }
-    public String typesToString() {
-        StringBuilder sb = new StringBuilder();
+    
+    public List<DataType> getParamTypes() {
+        List<DataType> paramTypes = new ArrayList<>();
         try {
-            this.hierarchalSymbolTable.add(new SymbolTable());
-            for (myFormals.start(); myFormals.isCurrent();) {
-
+            for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
                 FormalDeclNode formal = (FormalDeclNode) myFormals.getCurrent();
-
-                // add to symbol table
-                this.hierarchalSymbolTable.getLast().insertFull(formal.getId().getNameOfId(), formal.getType().getTypeName());
-
-                sb.append(formal.getType().getTypeName());
-                myFormals.advance();
-                if (myFormals.isCurrent()) {
-                    sb.append(", ");
-                }
+                TypeNode typeNode = formal.getTypeNode();
+                DataType dataType = DataType.fromString(typeNode.getTypeName());
+                paramTypes.add(dataType);
             }
         } catch (NoCurrentException ex) {
-            System.err.println("unexpected NoCurrentException in FormalsListNode.typesToString");
+            System.err.println("unexpected NoCurrentException in FormalsListNode.getParamTypes");
             System.exit(-1);
         }
-        return sb.toString();
+        return paramTypes;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        try {
+            for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
+                FormalDeclNode formal = (FormalDeclNode) myFormals.getCurrent();
+                noErrors = formal.namecheck(st) && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in FormalsListNode.namecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        try {
+            for (myFormals.start(); myFormals.isCurrent(); myFormals.advance()) {
+                FormalDeclNode formal = (FormalDeclNode) myFormals.getCurrent();
+                noErrors = formal.typecheck() && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in FormalsListNode.typecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
-        if (myFormals == null) { // shouldn't be possible
+        if (myFormals == null) {
             System.out.println("unexpected null myFormals in FormalsListNode.print");
             p.print("()");
             return;
@@ -306,9 +367,32 @@ class MethodBodyNode extends StmtNode {
         myDeclList = declList;
         myStmtList = stmtList;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        // Name check local variable declarations
+        noErrors = myDeclList.namecheck(st) && noErrors;
+        // Name check statements
+        noErrors = myStmtList.namecheck(st) && noErrors;
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        // Type check declarations and statements
+        noErrors = myDeclList.typecheck() && noErrors;
+        noErrors = myStmtList.typecheck() && noErrors;
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
-
         p.write("\n");
         myDeclList.decompile(p, indent + 2);
         p.write("\n");
@@ -323,6 +407,41 @@ class MethodBodyNode extends StmtNode {
 class StmtListNode extends ASTnode {
     public StmtListNode(Sequence S) {
         myStmts = S;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        try {
+            for (myStmts.start(); myStmts.isCurrent(); myStmts.advance()) {
+                StmtNode stmt = (StmtNode) myStmts.getCurrent();
+                noErrors = stmt.namecheck(st) && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in StmtListNode.namecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        try {
+            for (myStmts.start(); myStmts.isCurrent(); myStmts.advance()) {
+                StmtNode stmt = (StmtNode) myStmts.getCurrent();
+                noErrors = stmt.typecheck() && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in StmtListNode.typecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -346,6 +465,41 @@ class StmtListNode extends ASTnode {
 class ExpListNode extends ASTnode {
     public ExpListNode(Sequence S) {
         myExps = S;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        try {
+            for (myExps.start(); myExps.isCurrent(); myExps.advance()) {
+                ExpNode exp = (ExpNode) myExps.getCurrent();
+                noErrors = exp.namecheck(st) && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in ExpListNode.namecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        try {
+            for (myExps.start(); myExps.isCurrent(); myExps.advance()) {
+                ExpNode exp = (ExpNode) myExps.getCurrent();
+                noErrors = exp.typecheck() && noErrors;
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in ExpListNode.typecheck");
+            System.exit(-1);
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -380,6 +534,33 @@ class FieldDeclNode extends DeclNode {
         myType = type;
         myId = id;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        
+        String fieldName = myId.getNameOfId();
+        DataType dataType = DataType.fromString(myType.getTypeName());
+        
+        SymbolTable.SymbolInfo fieldInfo = new SymbolTable.SymbolInfo(
+            fieldName, dataType, SymbolType.FIELD,
+            myId.getLineNum(), myId.getCharNum()
+        );
+        
+        if (!st.addSymbol(fieldName, fieldInfo)) {
+            Errors.fatal(myId.getLineNum(), myId.getCharNum(),
+                "Duplicate field declaration: " + fieldName);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Fields don't have complex type checking beyond declaration
+        return true;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.print("static ");
@@ -389,8 +570,7 @@ class FieldDeclNode extends DeclNode {
         p.print(";");
     }
 
-
-    public TypeNode getType() {
+    public TypeNode getTypeNode() {
         return myType;
     }
 
@@ -408,6 +588,33 @@ class VarDeclNode extends DeclNode {
         myType = type;
         myId = id;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        
+        String varName = myId.getNameOfId();
+        DataType dataType = DataType.fromString(myType.getTypeName());
+        
+        SymbolTable.SymbolInfo varInfo = new SymbolTable.SymbolInfo(
+            varName, dataType, SymbolType.VARIABLE,
+            myId.getLineNum(), myId.getCharNum()
+        );
+        
+        if (!st.addSymbol(varName, varInfo)) {
+            Errors.fatal(myId.getLineNum(), myId.getCharNum(),
+                "Duplicate variable declaration: " + varName);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Variables don't have complex type checking beyond declaration
+        return true;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         myType.decompile(p, indent);
@@ -416,7 +623,7 @@ class VarDeclNode extends DeclNode {
         p.write("; ");
     }
 
-    public TypeNode getType() {
+    public TypeNode getTypeNode() {
         return myType;
     }
 
@@ -437,18 +644,72 @@ class MethodDeclNode extends DeclNode {
         myFormalsList = formalList;
         myBody = body;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        String methodName = myId.getNameOfId();
+        DataType returnType = DataType.fromString(myReturnType.getTypeName());
+        
+        // Get parameter types from formals list
+        List<DataType> paramTypes = new ArrayList<>();
+        if (myFormalsList != null) {
+            paramTypes = myFormalsList.getParamTypes();
+        }
+        
+        SymbolTable.SymbolInfo methodInfo = new SymbolTable.SymbolInfo(
+            methodName, returnType, paramTypes,
+            myId.getLineNum(), myId.getCharNum()
+        );
+        
+        if (!st.addSymbol(methodName, methodInfo)) {
+            Errors.fatal(myId.getLineNum(), myId.getCharNum(),
+                "Duplicate method declaration: " + methodName);
+            noErrors = false;
+        }
+        
+        // Create a new scope for the method body
+        SymbolTable methodScope = new SymbolTable(st);
+        
+        // Add formal parameters to the method scope
+        if (myFormalsList != null) {
+            noErrors = myFormalsList.namecheck(methodScope) && noErrors;
+        }
+        
+        // Name check the method body
+        noErrors = myBody.namecheck(methodScope) && noErrors;
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        // Type check formals and body
+        if (myFormalsList != null) {
+            noErrors = myFormalsList.typecheck() && noErrors;
+        }
+        noErrors = myBody.typecheck() && noErrors;
+        
+        return noErrors;
+    }
 
     public IdNode getId() {
         return myId;
     }
-    public TypeNode getReturnType() {
+    
+    public TypeNode getReturnTypeNode() {
         return myReturnType;
     }
+    
     public FormalsListNode getFormalsList() {
         return myFormalsList;
     }
+    
     public void decompile(PrintWriter p, int indent) {
-        // write decompile function
         p.print("public ");
         p.print("static ");
         myReturnType.decompile(p, indent);
@@ -456,9 +717,8 @@ class MethodDeclNode extends DeclNode {
         myId.decompile(p, indent);
         p.print(" ");
         if (this.myFormalsList == null) {
-            System.out.println("unexpected null myFormalsList in MethodDeclNode.decompile");
+            p.print("()");
         } else {
-            this.passSymbolTable(hierarchalSymbolTable);
             this.myFormalsList.decompile(p, indent);
         }
         p.print(" {");
@@ -468,7 +728,7 @@ class MethodDeclNode extends DeclNode {
     }
 
     // 4 kids
-    private TypeNode myReturnType; // null for a void return
+    private TypeNode myReturnType;
     private IdNode myId;
     private FormalsListNode myFormalsList;
     private MethodBodyNode myBody;
@@ -479,10 +739,38 @@ class FormalDeclNode extends DeclNode {
         myType = type;
         myId = id;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        
+        String paramName = myId.getNameOfId();
+        DataType dataType = DataType.fromString(myType.getTypeName());
+        
+        SymbolTable.SymbolInfo paramInfo = new SymbolTable.SymbolInfo(
+            paramName, dataType, SymbolType.ARGUMENT,
+            myId.getLineNum(), myId.getCharNum()
+        );
+        
+        if (!st.addSymbol(paramName, paramInfo)) {
+            Errors.fatal(myId.getLineNum(), myId.getCharNum(),
+                "Duplicate parameter name: " + paramName);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Formal parameters don't have complex type checking
+        return true;
+    }
 
-    public TypeNode getType() {
+    public TypeNode getTypeNode() {
         return myType;
     }
+    
     public IdNode getId() {
         return myId;
     }
@@ -568,6 +856,27 @@ class PrintStmtNode extends StmtNode {
     public PrintStmtNode(ExpNode exp) {
         myExp = exp;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        return myExp.namecheck(st);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = myExp.typecheck();
+        
+        // Print can handle INT, BOOLEAN, or STRING
+        DataType expType = myExp.getType();
+        if (expType != DataType.INT && expType != DataType.BOOLEAN && 
+            expType != DataType.STRING && expType != DataType.ERROR) {
+            // Could add error reporting here if needed
+            noErrors = false;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("System.out.println(");
@@ -583,6 +892,36 @@ class AssignStmtNode extends StmtNode {
     public AssignStmtNode(IdNode id, ExpNode exp) {
         myId = id;
         myExp = exp;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        noErrors = myId.namecheck(st) && noErrors;
+        noErrors = myExp.namecheck(st) && noErrors;
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        noErrors = myId.typecheck() && noErrors;
+        noErrors = myExp.typecheck() && noErrors;
+        
+        // Check type compatibility
+        DataType idType = myId.getType();
+        DataType expType = myExp.getType();
+        
+        if (idType != expType && idType != DataType.ERROR && expType != DataType.ERROR) {
+            // Type mismatch in assignment
+            noErrors = false;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -601,6 +940,35 @@ class IfStmtNode extends StmtNode {
     public IfStmtNode(ExpNode exp, StmtListNode slist) {
         myExp = exp;
         myStmtList = slist;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        noErrors = myExp.namecheck(st) && noErrors;
+        
+        // Create new scope for if body
+        SymbolTable ifScope = new SymbolTable(st);
+        noErrors = myStmtList.namecheck(ifScope) && noErrors;
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        noErrors = myExp.typecheck() && noErrors;
+        noErrors = myStmtList.typecheck() && noErrors;
+        
+        // Condition must be boolean
+        if (myExp.getType() != DataType.BOOLEAN && myExp.getType() != DataType.ERROR) {
+            noErrors = false;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -623,6 +991,40 @@ class IfElseStmtNode extends StmtNode {
         myExp = exp;
         myThenStmtList = slist1;
         myElseStmtList = slist2;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        
+        noErrors = myExp.namecheck(st) && noErrors;
+        
+        // Create new scope for then branch
+        SymbolTable thenScope = new SymbolTable(st);
+        noErrors = myThenStmtList.namecheck(thenScope) && noErrors;
+        
+        // Create new scope for else branch
+        SymbolTable elseScope = new SymbolTable(st);
+        noErrors = myElseStmtList.namecheck(elseScope) && noErrors;
+        
+        return noErrors;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        
+        noErrors = myExp.typecheck() && noErrors;
+        noErrors = myThenStmtList.typecheck() && noErrors;
+        noErrors = myElseStmtList.typecheck() && noErrors;
+        
+        // Condition must be boolean
+        if (myExp.getType() != DataType.BOOLEAN && myExp.getType() != DataType.ERROR) {
+            noErrors = false;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -762,13 +1164,28 @@ class IntLitNode extends ExpNode {
         myLineNum = lineNum;
         myColNum = colNum;
         myIntVal = intVal;
+        myType = DataType.INT;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        // Literals don't need name checking
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Type is set in constructor
+        return true;
     }
 
     public void decompile(PrintWriter p, int indent) {
         p.write(Long.toString(myIntVal));
     }
 
+    @SuppressWarnings("unused")
     private int myLineNum;
+    @SuppressWarnings("unused")
     private int myColNum;
     private int myIntVal;
 }
@@ -778,6 +1195,19 @@ class StringLitNode extends ExpNode {
         myLineNum = lineNum;
         myColNum = colNum;
         myStrVal = strVal;
+        myType = DataType.STRING;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        // Literals don't need name checking
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Type is set in constructor
+        return true;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -786,7 +1216,9 @@ class StringLitNode extends ExpNode {
         p.write("\"");
     }
 
+    @SuppressWarnings("unused")
     private int myLineNum;
+    @SuppressWarnings("unused")
     private int myColNum;
     private String myStrVal;
 }
@@ -795,13 +1227,28 @@ class TrueNode extends ExpNode {
     public TrueNode(int lineNum, int colNum) {
         myLineNum = lineNum;
         myColNum = colNum;
+        myType = DataType.BOOLEAN;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        // Literals don't need name checking
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Type is set in constructor
+        return true;
     }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("true");
     }
 
+    @SuppressWarnings("unused")
     private int myLineNum;
+    @SuppressWarnings("unused")
     private int myColNum;
 }
 
@@ -809,13 +1256,28 @@ class FalseNode extends ExpNode {
     public FalseNode(int lineNum, int colNum) {
         myLineNum = lineNum;
         myColNum = colNum;
+        myType = DataType.BOOLEAN;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        // Literals don't need name checking
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Type is set in constructor
+        return true;
     }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("false");
     }
 
+    @SuppressWarnings("unused")
     private int myLineNum;
+    @SuppressWarnings("unused")
     private int myColNum;
 }
 
@@ -829,6 +1291,36 @@ class IdNode extends ExpNode {
 
     public String getNameOfId() {
         return myStrVal;
+    }
+    
+    public int getLineNum() {
+        return myLineNum;
+    }
+    
+    public int getCharNum() {
+        return myCharNum;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        // Look up the identifier in the symbol table
+        SymbolTable.SymbolInfo info = st.lookup(myStrVal);
+        if (info == null) {
+            Errors.fatal(myLineNum, myCharNum, "Undeclared identifier: " + myStrVal);
+            hasErrors = true;
+            myType = DataType.ERROR;
+            return false;
+        }
+        // Set the type based on the symbol info
+        myType = info.getDataType();
+        return true;
+    }
+    
+    @Override
+    public boolean typecheck() {
+        // Type is already determined during namecheck
+        return !hasErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -845,6 +1337,12 @@ abstract class UnaryExpNode extends ExpNode {
     public UnaryExpNode(ExpNode exp) {
         myExp = exp;
     }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        return myExp.namecheck(st);
+    }
 
     // one child
     protected ExpNode myExp;
@@ -854,6 +1352,15 @@ abstract class BinaryExpNode extends ExpNode {
     public BinaryExpNode(ExpNode exp1, ExpNode exp2) {
         myExp1 = exp1;
         myExp2 = exp2;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        boolean noErrors = true;
+        noErrors = myExp1.namecheck(st) && noErrors;
+        noErrors = myExp2.namecheck(st) && noErrors;
+        return noErrors;
     }
 
     // two kids
@@ -869,6 +1376,24 @@ class UnaryMinusNode extends UnaryExpNode {
     public UnaryMinusNode(ExpNode exp) {
         super(exp);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = myExp.typecheck();
+        
+        DataType expType = myExp.getType();
+        if (expType == DataType.INT) {
+            myType = DataType.INT;
+        } else if (expType != DataType.ERROR) {
+            // Type error: unary minus requires int
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("-");
@@ -879,6 +1404,24 @@ class UnaryMinusNode extends UnaryExpNode {
 class NotNode extends UnaryExpNode {
     public NotNode(ExpNode exp) {
         super(exp);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = myExp.typecheck();
+        
+        DataType expType = myExp.getType();
+        if (expType == DataType.BOOLEAN) {
+            myType = DataType.BOOLEAN;
+        } else if (expType != DataType.ERROR) {
+            // Type error: not requires boolean
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -895,6 +1438,27 @@ class PlusNode extends BinaryExpNode {
     public PlusNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.INT;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write(" (");
@@ -908,6 +1472,27 @@ class PlusNode extends BinaryExpNode {
 class MinusNode extends BinaryExpNode {
     public MinusNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.INT;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -923,6 +1508,27 @@ class TimesNode extends BinaryExpNode {
     public TimesNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.INT;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write(" (");
@@ -936,6 +1542,27 @@ class TimesNode extends BinaryExpNode {
 class DivideNode extends BinaryExpNode {
     public DivideNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.INT;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -951,6 +1578,27 @@ class AndNode extends BinaryExpNode {
     public AndNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.BOOLEAN && type2 == DataType.BOOLEAN) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write(" (");
@@ -965,6 +1613,27 @@ class OrNode extends BinaryExpNode {
     public OrNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.BOOLEAN && type2 == DataType.BOOLEAN) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("(");
@@ -978,6 +1647,28 @@ class OrNode extends BinaryExpNode {
 class EqualsNode extends BinaryExpNode {
     public EqualsNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        // Both operands must have the same type
+        if (type1 == type2 && type1 != DataType.ERROR) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -994,6 +1685,28 @@ class NotEqualsNode extends BinaryExpNode {
     public NotEqualsNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        // Both operands must have the same type
+        if (type1 == type2 && type1 != DataType.ERROR) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("(");
@@ -1007,6 +1720,27 @@ class NotEqualsNode extends BinaryExpNode {
 class LessNode extends BinaryExpNode {
     public LessNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -1022,6 +1756,27 @@ class GreaterNode extends BinaryExpNode {
     public GreaterNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("(");
@@ -1035,7 +1790,27 @@ class GreaterNode extends BinaryExpNode {
 class LessEqNode extends BinaryExpNode {
     public LessEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
-
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -1050,6 +1825,27 @@ class LessEqNode extends BinaryExpNode {
 class GreaterEqNode extends BinaryExpNode {
     public GreaterEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = true;
+        noErrors = myExp1.typecheck() && noErrors;
+        noErrors = myExp2.typecheck() && noErrors;
+        
+        DataType type1 = myExp1.getType();
+        DataType type2 = myExp2.getType();
+        
+        if (type1 == DataType.INT && type2 == DataType.INT) {
+            myType = DataType.BOOLEAN;
+        } else if (type1 != DataType.ERROR && type2 != DataType.ERROR) {
+            myType = DataType.ERROR;
+            noErrors = false;
+        } else {
+            myType = DataType.ERROR;
+        }
+        
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
@@ -1094,6 +1890,19 @@ class CallExprNode extends ExpNode {
 class ParenthesizedExpNode extends ExpNode {
     public ParenthesizedExpNode(ExpNode exp) {
         myExp = exp;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        return myExp.namecheck(st);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = myExp.typecheck();
+        myType = myExp.getType();
+        return noErrors;
     }
 
     public void decompile(PrintWriter p, int indent) {
