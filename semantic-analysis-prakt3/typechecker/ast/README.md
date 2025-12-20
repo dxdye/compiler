@@ -1,84 +1,128 @@
-# AST Node Classes
+# AST Package Structure
 
-This directory contains all Abstract Syntax Tree (AST) node classes for the Simple language compiler.
+This directory contains the Abstract Syntax Tree (AST) implementation for the Simple language compiler, organized into semantic subpackages.
 
-## Organization
+## Package Organization
 
-Each AST node is defined in its own file. All classes are in the default (unnamed) package to maintain compatibility with the rest of the codebase.
+### `ast.base/` - Core Infrastructure (8 classes)
+Foundation classes and container nodes:
+- `ASTnode` - Abstract base for all AST nodes
+- `ProgramNode` - Root of the AST
+- `ClassBodyNode` - Class body container
+- List nodes: `DeclListNode`, `FormalsListNode`, `StmtListNode`, `ExpListNode`, `SwitchGroupListNode`
 
-## Class Hierarchy
+**[See detailed documentation →](base/README.md)**
 
+### `ast.decl/` - Declaration Nodes (5 classes)
+All declaration types in the language:
+- `DeclNode` - Abstract base for declarations
+- `FieldDeclNode` - Field declarations
+- `VarDeclNode` - Variable declarations
+- `MethodDeclNode` - Method declarations
+- `FormalDeclNode` - Parameter declarations
+
+**[See detailed documentation →](decl/README.md)**
+
+### `ast.type/` - Type Nodes (5 classes)
+Type representation nodes:
+- `TypeNode` - Abstract base for types
+- `VoidNode`, `IntNode`, `BooleanNode`, `StringNode`
+
+**[See detailed documentation →](type/README.md)**
+
+### `ast.stmt/` - Statement Nodes (12 classes)
+All statement types:
+- Control flow: `IfStmtNode`, `IfElseStmtNode`, `WhileStmtNode`, `SwitchStmtNode`
+- Method-related: `MethodBodyNode`, `CallStmtNode`, `ReturnStmtNode`, `ReturnExprStmtNode`
+- Other: `AssignStmtNode`, `PrintStmtNode`, `CaseStmtNode`
+
+**[See detailed documentation →](stmt/README.md)**
+
+### `ast.expr/` - Expression Nodes (25 classes)
+All expression types:
+- Literals: `IntLiteralExpNode`, `BoolLiteralExpNode`, `StringLiteralExpNode`
+- Operators: Unary (`UnaryMinusExpNode`, `NotExpNode`)
+- Binary: Arithmetic (`+`, `-`, `*`, `/`), Logical (`&&`, `||`), Comparison (`<`, `>`, `<=`, `>=`), Equality (`==`, `!=`)
+- Other: `IdExpNode`, `CallExprNode`, `ParenthesizedExpNode`
+
+**[See detailed documentation →](expr/README.md)**
+
+## Design Overview
+
+### Class Hierarchy
 ```
-ASTnode (abstract base)
+ASTnode (ast.base)
 ├── ProgramNode
 ├── ClassBodyNode
-├── DeclListNode
-├── FormalsListNode
-├── StmtListNode
-├── ExpListNode
-├── SwitchGroupListNode
-│
-├── DeclNode (abstract)
+├── *ListNode (containers)
+├── DeclNode (ast.decl)
 │   ├── FieldDeclNode
 │   ├── VarDeclNode
 │   ├── MethodDeclNode
 │   └── FormalDeclNode
-│
-├── TypeNode (abstract)
+├── TypeNode (ast.type)
 │   ├── VoidNode
 │   ├── IntNode
 │   ├── BooleanNode
 │   └── StringNode
-│
-├── StmtNode (abstract)
+├── StmtNode (ast.stmt)
 │   ├── MethodBodyNode
-│   ├── PrintStmtNode
-│   ├── AssignStmtNode
-│   ├── IfStmtNode
-│   ├── IfElseStmtNode
-│   ├── WhileStmtNode
-│   ├── CallStmtNode
-│   ├── SwitchStmtNode
-│   ├── ReturnStmtNode
-│   ├── ReturnExprStmtNode
-│   └── CaseStmtNode
-│
-└── ExpNode (abstract)
-    ├── IntLitNode
-    ├── StringLitNode
-    ├── TrueNode
-    ├── FalseNode
-    ├── IdNode
-    ├── EmptyExprNode
-    ├── CallExprNode
-    ├── ParenthesizedExpNode
-    │
-    ├── UnaryExpNode (abstract)
-    │   ├── UnaryMinusNode
-    │   └── NotNode
-    │
-    └── BinaryExpNode (abstract)
-        ├── PlusNode
-        ├── MinusNode
-        ├── TimesNode
-        ├── DivideNode
-        ├── AndNode
-        ├── OrNode
-        ├── EqualsNode
-        ├── NotEqualsNode
-        ├── LessNode
-        ├── GreaterNode
-        ├── LessEqNode
-        └── GreaterEqNode
+│   ├── IfStmtNode, IfElseStmtNode, WhileStmtNode
+│   ├── AssignStmtNode, PrintStmtNode
+│   └── ... (see stmt/README.md)
+└── ExpNode (ast.expr)
+    ├── Literals (Int, Bool, String)
+    ├── UnaryExpNode → UnaryMinusExpNode, NotExpNode
+    ├── BinaryExpNode → Arithmetic, Logical, Comparison, Equality
+    └── ... (see expr/README.md)
 ```
 
-## Key Methods
+### Common Functionality
+All AST nodes inherit from `ASTnode` and provide:
+- **Unparsing** - Converting AST back to source code (`decompile()`)
+- **Name Checking** - Verifying identifier declarations and uses (`namecheck()`)
+- **Type Checking** - Ensuring type correctness (`typecheck()`)
 
-All AST nodes inherit from `ASTnode` and implement:
+### Dependencies
+- **Core support**: `support.*` package provides `SymbolTable`, `DataType`, `Types`, `Errors`, etc.
+- **Inter-package**: Nodes import from other AST packages as needed
 
-- `namecheck(SymbolTable st)` - Performs name analysis, checking that all identifiers are declared before use
-- `typecheck()` - Performs type checking, ensuring type compatibility in expressions and statements  
-- `decompile(PrintWriter pw, int indent)` - Outputs a formatted representation of the AST
+## Statistics
+- **Total Classes**: 55 (8 base + 5 decl + 5 type + 12 stmt + 25 expr)
+- **Total Packages**: 5 subpackages + 1 parent package
+- **Lines of Code**: ~1,950 (originally in single `ast.java` file)
+
+## Usage
+
+### In Parser (simple.cup)
+```java
+import ast.base.*;
+import ast.decl.*;
+import ast.type.*;
+import ast.stmt.*;
+import ast.expr.*;
+```
+
+### In Main Program (P4.java)
+```java
+import ast.base.*;  // For ProgramNode, ASTnode
+import support.*;   // For symbol table, types, errors
+```
+
+## Build System
+All AST files are compiled to the `classes/` directory:
+```
+classes/
+├── ast/
+│   ├── base/
+│   ├── decl/
+│   ├── type/
+│   ├── stmt/
+│   └── expr/
+└── support/
+```
+
+See `Makefile` for build configuration.
 
 ## Dependencies
 

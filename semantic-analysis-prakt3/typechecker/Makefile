@@ -1,7 +1,7 @@
 ###
 # This Makefile can be used to make a parser for the Simple language
 # (Yylex.class) and to make a program (P4.class) that tests the parser and
-# the unparse methods in ast.java.
+# the unparse methods in the AST classes (organized in ast/ package).
 #
 # The default makes both the parser and the test program.
 #
@@ -105,49 +105,49 @@ clean:
 ###
 
 # Single test target (existing)
-test:	test.sim P4.class 
+test:	tests/test.sim P4.class 
 	@echo "If you get an error below your Parser does not work yet!"
 	@echo "Modify the simple.cup specification to implement the language!"
-	java -cp $(CLASSPATH) P4 test.sim test.out
+	java -cp $(CLASSPATH) P4 tests/test.sim tests/test.out
 
 # Test with simple correct program
-test-simple: simple_correct.sim P4.class
+test-simple: tests/simple_correct.sim P4.class
 	@echo "=========================================="
 	@echo "Testing: simple_correct.sim (should pass)"
 	@echo "=========================================="
-	java -cp $(CLASSPATH) P4 simple_correct.sim simple_correct.out
+	java -cp $(CLASSPATH) P4 tests/simple_correct.sim tests/simple_correct.out
 	@echo ""
 
 # Test with comprehensive program
-test-comprehensive: comprehensive_test.sim P4.class
+test-comprehensive: tests/comprehensive_test.sim P4.class
 	@echo "=========================================="
 	@echo "Testing: comprehensive_test.sim (should pass)"
 	@echo "=========================================="
-	java -cp $(CLASSPATH) P4 comprehensive_test.sim comprehensive_test.out
+	java -cp $(CLASSPATH) P4 tests/comprehensive_test.sim tests/comprehensive_test.out
 	@echo ""
 
 # Test name errors (should fail name checking)
-test-name-errors: test_name_error.sim P4.class
+test-name-errors: tests/test_name_error.sim P4.class
 	@echo "=========================================="
 	@echo "Testing: test_name_error.sim (should fail name checking)"
 	@echo "=========================================="
-	-java -cp $(CLASSPATH) P4 test_name_error.sim test_name_error.out
+	-java -cp $(CLASSPATH) P4 tests/test_name_error.sim tests/test_name_error.out
 	@echo ""
 
 # Test type errors (should fail type checking)
-test-type-errors: test_type_error.sim P4.class
+test-type-errors: tests/test_type_error.sim P4.class
 	@echo "=========================================="
 	@echo "Testing: test_type_error.sim (should fail type checking)"
 	@echo "=========================================="
-	-java -cp $(CLASSPATH) P4 test_type_error.sim test_type_error.out
+	-java -cp $(CLASSPATH) P4 tests/test_type_error.sim tests/test_type_error.out
 	@echo ""
 
 # Test with type example (has errors)
-test-type-example: type_example.sim P4.class
+test-type-example: tests/type_example.sim P4.class
 	@echo "=========================================="
 	@echo "Testing: type_example.sim (should fail type checking)"
 	@echo "=========================================="
-	-java -cp $(CLASSPATH) P4 type_example.sim type_example.out
+	-java -cp $(CLASSPATH) P4 tests/type_example.sim tests/type_example.out
 	@echo ""
 
 # Test all correct programs
@@ -170,7 +170,7 @@ test-all: test-correct test-errors
 
 # Clean test output files
 clean-tests:
-	rm -f *.out
+	rm -f tests/*.out
 
 # Clean everything including tests
 clean-all: clean clean-tests
@@ -181,14 +181,14 @@ clean-all: clean clean-tests
 ###
 
 submit:
-	zip submit.zip *.java test.sim Makefile simple.jlex simple.cup test.sim  
+	zip submit.zip support/*.java ast/*/*.java P4.java IO.java tests/test.sim Makefile simple.jlex simple.cup
 
 ###
 # handout
 ###
 
 handout:
-	zip handout.zip test.sim Makefile simple.grammar ast.java Errors.java IO.java NoCurrentException.java P4.java Sequence.java simple.cup simple.grammar
+	zip handout.zip tests/test.sim Makefile simple.grammar support/*.java ast/*/*.java P4.java IO.java simple.cup simple.grammar
 
 
 
