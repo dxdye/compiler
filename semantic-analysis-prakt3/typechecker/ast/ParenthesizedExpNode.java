@@ -1,0 +1,30 @@
+import java.io.*;
+import java.util.*;
+
+public class ParenthesizedExpNode extends ExpNode {
+    public ParenthesizedExpNode(ExpNode exp) {
+        myExp = exp;
+    }
+    
+    @Override
+    public boolean namecheck(SymbolTable st) {
+        this.symbolTable = st;
+        return myExp.namecheck(st);
+    }
+    
+    @Override
+    public boolean typecheck() {
+        boolean noErrors = myExp.typecheck();
+        myType = myExp.getType();
+        return noErrors;
+    }
+
+    public void decompile(PrintWriter p, int indent) {
+        p.write("(");
+        myExp.decompile(p, indent);
+        p.write(")");
+    }
+
+    // 1 kid
+    private ExpNode myExp;
+}

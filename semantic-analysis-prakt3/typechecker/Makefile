@@ -47,11 +47,23 @@ parser.java: simple.cup
 parser.class: parser.java ASTnode.class Yylex.class Errors.class
 	javac $(FLAGS) parser.java
 
-Yylex.class: simple.jlex.java sym.class Errors.class
+Yylex.class: simple.jlex.java sym.class Errors.class ASTnode.class
 	javac $(FLAGS) simple.jlex.java
 
-ASTnode.class: ast.java Sequence.class NoCurrentException.class
-	javac $(FLAGS) ast.java
+ASTnode.class: ast/*.java Sequence.class NoCurrentException.class DataType.class SymbolType.class SymbolTable.class Types.class
+	javac $(FLAGS) -d . ast/*.java
+
+DataType.class: DataType.java
+	javac $(FLAGS) DataType.java
+
+SymbolType.class: SymbolType.java
+	javac $(FLAGS) SymbolType.java
+
+SymbolTable.class: SymbolTable.java
+	javac $(FLAGS) SymbolTable.java
+
+Types.class: Types.java
+	javac $(FLAGS) Types.java
 
 
 simple.jlex.java: simple.jlex
