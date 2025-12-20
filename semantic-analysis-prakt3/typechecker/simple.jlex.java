@@ -3,6 +3,12 @@
 /* User Code */
 import java_cup.runtime.*; // defines the Symbol class
 import java.util.LinkedList;
+import support.*;
+import ast.base.*;
+import ast.decl.*;
+import ast.type.*;
+import ast.stmt.*;
+import ast.expr.*;
 
 // The generated scanner will return a Symbol for each token that it finds.
 // A Symbol contains an Object field named value; that field will be of type
