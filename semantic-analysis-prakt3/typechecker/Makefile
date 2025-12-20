@@ -8,9 +8,9 @@
 # make clean removes all generated files.
 #
 ###
-CLASSPATH =  .:../jars/java-cup-11b-runtime.jar
+CLASSPATH = .:classes:../jars/java-cup-11b-runtime.jar
 JARFILE = ../jars/java-cup-11b.jar
-FLAGS = -g -cp $(CLASSPATH)
+FLAGS = -g -cp $(CLASSPATH) -d classes
 
 # Default target
 all: P4.class
@@ -50,20 +50,30 @@ parser.class: parser.java ASTnode.class Yylex.class Errors.class
 Yylex.class: simple.jlex.java sym.class Errors.class ASTnode.class
 	javac $(FLAGS) simple.jlex.java
 
-ASTnode.class: ast/*.java Sequence.class NoCurrentException.class DataType.class SymbolType.class SymbolTable.class Types.class
-	javac $(FLAGS) -d . ast/*.java
+# Compile all AST packages and support package
+ASTnode.class: ast/base/*.java ast/decl/*.java ast/type/*.java ast/stmt/*.java ast/expr/*.java support/*.java
+	javac $(FLAGS) support/*.java ast/base/*.java ast/decl/*.java ast/type/*.java ast/stmt/*.java ast/expr/*.java
 
-DataType.class: DataType.java
-	javac $(FLAGS) DataType.java
+DataType.class: support/DataType.java
+	javac $(FLAGS) support/DataType.java
 
-SymbolType.class: SymbolType.java
-	javac $(FLAGS) SymbolType.java
+SymbolType.class: support/SymbolType.java
+	javac $(FLAGS) support/SymbolType.java
 
-SymbolTable.class: SymbolTable.java
-	javac $(FLAGS) SymbolTable.java
+SymbolTable.class: support/SymbolTable.java
+	javac $(FLAGS) support/SymbolTable.java
 
-Types.class: Types.java
-	javac $(FLAGS) Types.java
+Types.class: support/Types.java
+	javac $(FLAGS) support/Types.java
+
+Sequence.class: support/Sequence.java
+	javac $(FLAGS) support/Sequence.java
+
+NoCurrentException.class: support/NoCurrentException.java
+	javac $(FLAGS) support/NoCurrentException.java
+
+Errors.class: support/Errors.java
+	javac $(FLAGS) support/Errors.java
 
 
 simple.jlex.java: simple.jlex
@@ -80,15 +90,6 @@ sym.class: sym.java
 sym.java: simple.cup
 	java -cp $(CLASSPATH) java_cup.Main < simple.cup
 
-Errors.class: Errors.java
-	javac Errors.java
-
-Sequence.class: Sequence.java
-	javac $(FLAGS) Sequence.java
-
-NoCurrentException.class: NoCurrentException.java
-	javac NoCurrentException.java
-
 IO.class: IO.java
 	javac $(FLAGS) IO.java
 
@@ -96,7 +97,8 @@ IO.class: IO.java
 # clean
 ###
 clean:
-	rm -f *~ *.class parser.java simple.jlex.java
+	rm -f *~ parser.java simple.jlex.java
+	rm -rf classes/*
 
 ###
 # test targets

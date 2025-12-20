@@ -3,6 +3,12 @@
  **********************************************************************/
 
 import java_cup.runtime.*;
+import support.*;
+import ast.base.*;
+import ast.decl.*;
+import ast.type.*;
+import ast.stmt.*;
+import ast.expr.*;
 
 parser code {:
    public void report_error(String message, Object info) {

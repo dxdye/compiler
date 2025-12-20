@@ -3,6 +3,12 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 import java_cup.runtime.*;
+import support.*;
+import ast.base.*;
+import ast.decl.*;
+import ast.type.*;
+import ast.stmt.*;
+import ast.expr.*;
 
 // **********************************************************************
 // Main program to test the simple parser.
