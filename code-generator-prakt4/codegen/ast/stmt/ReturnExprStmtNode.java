@@ -15,7 +15,13 @@ public class ReturnExprStmtNode extends StmtNode { // added class
     public ReturnExprStmtNode(
             ExpNode exp) {
         myExp = exp;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write("return ");

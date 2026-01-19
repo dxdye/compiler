@@ -11,7 +11,13 @@ import java.util.*;
 
 public class EmptyExprNode extends ExpNode {
     public EmptyExprNode() {
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         // do nothing -- represents an empty expression

@@ -28,6 +28,17 @@ public class IntLitNode extends ExpNode {
         // Type is set in constructor
         return true;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+        String reg = regAlloc.allocateTemp();
+        
+        // Load immediate value into register
+        codeGen.emit("li " + reg + ", " + myIntVal, "Load integer literal " + myIntVal);
+        
+        return reg; // Return register containing the value
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write(Long.toString(myIntVal));

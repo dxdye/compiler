@@ -38,6 +38,17 @@ public class MethodBodyNode extends StmtNode {
         
         return noErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        // Generate code for local variable declarations
+        myDeclList.codegen(codeGen);
+        
+        // Generate code for statements
+        myStmtList.codegen(codeGen);
+        
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write("\n");

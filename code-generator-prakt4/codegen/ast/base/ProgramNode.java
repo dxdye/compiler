@@ -43,6 +43,17 @@ public class ProgramNode extends ASTnode {
         // Type check the class body
         return myClassBody.typecheck();
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        codeGen.setGlobalSymbolTable(this.symbolTable);
+        codeGen.emitComment("Program: " + myId.getNameOfId());
+        
+        // Generate code for class body (fields and methods)
+        myClassBody.codegen(codeGen);
+        
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         System.out.println("ProgramNode write");

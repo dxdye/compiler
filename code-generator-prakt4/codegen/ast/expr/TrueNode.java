@@ -26,7 +26,19 @@ public class TrueNode extends ExpNode {
     public boolean typecheck() {
         // Type is set in constructor
         return true;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+        String reg = regAlloc.allocateTemp();
+        
+        // Load true (1) into register
+        codeGen.emit("li " + reg + ", 1", "Load boolean true");
+        
+        return reg;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write("true");

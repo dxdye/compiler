@@ -41,6 +41,19 @@ public class VarDeclNode extends DeclNode {
         // Variables don't have complex type checking beyond declaration
         return true;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        // Local variables are allocated on the stack
+        // This is handled during method code generation
+        // We just allocate space here
+        String varName = myId.getNameOfId();
+        int offset = codeGen.allocateLocal(varName, 4); // 4 bytes for all types
+        
+        codeGen.emitComment("Local variable " + varName + " at offset " + offset);
+        
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         myType.decompile(p, indent);

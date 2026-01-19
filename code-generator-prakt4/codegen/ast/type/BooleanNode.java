@@ -11,7 +11,13 @@ import java.util.*;
 
 public class BooleanNode extends TypeNode {
     public BooleanNode() {
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.print("boolean");

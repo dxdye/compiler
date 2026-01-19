@@ -12,7 +12,13 @@ import java.util.*;
 public class SwitchGroupListNode extends ASTnode {
     public SwitchGroupListNode(Sequence S) {
         mySwitchGroups = S;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         for (mySwitchGroups.start(); mySwitchGroups.isCurrent();) {

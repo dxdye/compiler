@@ -50,6 +50,28 @@ public class IdNode extends ExpNode {
         // Type is already determined during namecheck
         return !hasErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+        String reg = regAlloc.allocateTemp();
+        
+        // Check if it's a local variable or static field
+        Integer localOffset = codeGen.getLocalOffset(myStrVal);
+        
+        if (localOffset != null) {
+            // Local variable - load from stack
+            codeGen.emit("lw " + reg + ", " + localOffset + "($fp)", 
+                        "Load local " + myStrVal);
+        } else {
+            // Static field - load from data segment
+            String label = codeGen.getStaticVarLabel(myStrVal);
+            codeGen.emit("lw " + reg + ", " + label, 
+                        "Load static " + myStrVal);
+        }
+        
+        return reg; // Return register containing the value
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.print(myStrVal);

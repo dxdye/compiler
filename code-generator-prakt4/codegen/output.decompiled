@@ -2,18 +2,15 @@ public class SimpleTest {
   static int x;
   static int y;
   static boolean flag;
+  public static void main () {
+    int a; 
+    int b; 
 
-  public static void main() {
-    int a;
-    int b;
-    
     a = 5;
     b = 10;
-    x = a + b;
-    y = x * 2;
-    
-    flag = a < b;
-    
+    x =  (a + b) ;
+    y =  (x * 2) ;
+    flag = (a < b) ;
     System.out.println(x);
     System.out.println(flag);
   }

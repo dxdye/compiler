@@ -42,7 +42,34 @@ public class IfStmtNode extends StmtNode {
         }
         
         return noErrors;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.LabelGenerator labelGen = codeGen.getLabelGenerator();
+        
+        // Generate labels for if statement
+        String[] labels = labelGen.newIfLabels();
+        String endLabel = labels[1];
+        
+        // Generate code for condition
+        String condReg = myExp.codegen(codeGen);
+        
+        // Branch if false (condition == 0)
+        codeGen.emit("beq " + condReg + ", $zero, " + endLabel, "If condition false, skip body");
+        
+        // Free condition register
+        codeGen.getRegisterAllocator().freeRegister(condReg);
+        
+        // Generate code for if body
+        myStmtList.codegen(codeGen);
+        
+        // End label
+        codeGen.emitLabel(endLabel);
+        
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write("if ( ");

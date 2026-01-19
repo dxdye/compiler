@@ -41,6 +41,17 @@ public class FieldDeclNode extends DeclNode {
         // Fields don't have complex type checking beyond declaration
         return true;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        // Static fields are allocated in the data segment
+        String fieldName = myId.getNameOfId();
+        DataType dataType = DataType.fromString(myType.getTypeName());
+        
+        codeGen.addStaticVariable(fieldName, dataType);
+        
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.print("static ");

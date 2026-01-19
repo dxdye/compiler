@@ -44,6 +44,34 @@ public class AssignStmtNode extends StmtNode {
         
         return noErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        codeGen.emitComment("Assignment: " + myId.getNameOfId());
+        
+        // Generate code for the expression (result in a register)
+        String expReg = myExp.codegen(codeGen);
+        
+        // Get the location of the variable
+        String varName = myId.getNameOfId();
+        Integer localOffset = codeGen.getLocalOffset(varName);
+        
+        if (localOffset != null) {
+            // Local variable - store on stack
+            codeGen.emit("sw " + expReg + ", " + localOffset + "($fp)", 
+                        "Store to local " + varName);
+        } else {
+            // Static field - store in data segment
+            String label = codeGen.getStaticVarLabel(varName);
+            codeGen.emit("sw " + expReg + ", " + label, 
+                        "Store to static " + varName);
+        }
+        
+        // Free the expression register
+        codeGen.getRegisterAllocator().freeRegister(expReg);
+        
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);

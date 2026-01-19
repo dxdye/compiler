@@ -16,7 +16,13 @@ public class CaseStmtNode extends StmtNode {
     public CaseStmtNode(ExpNode caseValue, StmtListNode stmtList) {
         myCaseExpr = caseValue;
         myStmtList = stmtList;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         if (myCaseExpr == null) {

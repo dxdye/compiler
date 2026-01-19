@@ -42,12 +42,26 @@ public class P4 {
       System.exit(-1);
     }
 
-    // open output file
+    // open output file (for decompilation)
     PrintWriter outFile = null;
     try {
       outFile = IO.openOutputFile(args[1]);
     } catch (IOException ex) {
       System.err.println("File " + args[1] + " could not be opened.");
+      System.exit(-1);
+    }
+    
+    // open assembly output file
+    PrintWriter asmFile = null;
+    try {
+      String asmFileName = args[1].replace(".decompiled", ".asm");
+      if (asmFileName.equals(args[1])) {
+        asmFileName = args[1] + ".asm";
+      }
+      asmFile = IO.openOutputFile(asmFileName);
+      System.out.println("Assembly output will be written to: " + asmFileName);
+    } catch (IOException ex) {
+      System.err.println("Assembly output file could not be opened.");
       System.exit(-1);
     }
 
@@ -94,6 +108,14 @@ public class P4 {
     System.out.println("\n=== Decompiling ===");
     ((ASTnode) root.value).decompile(outFile, 0);
     outFile.close();
+    
+    // Generate MIPS assembly code
+    System.out.println("\n=== Code Generation ===");
+    CodeGenerator codeGen = new CodeGenerator(asmFile);
+    ((ASTnode) root.value).codegen(codeGen);
+    codeGen.finalizeCode();
+    asmFile.close();
+    System.out.println("Code generation completed.");
 
     return;
   }

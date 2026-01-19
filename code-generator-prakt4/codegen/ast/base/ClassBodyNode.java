@@ -25,6 +25,13 @@ public class ClassBodyNode extends ASTnode {
     public boolean typecheck() {
         return myDeclList.typecheck();
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        // Generate code for all declarations (fields and methods)
+        myDeclList.codegen(codeGen);
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         myDeclList.decompile(p, indent + 2);

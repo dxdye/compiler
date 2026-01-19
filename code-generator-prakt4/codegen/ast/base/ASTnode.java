@@ -44,6 +44,12 @@ public abstract class ASTnode {
         return true; // default: no errors
     }
     
+    // Code generation: generate MIPS assembly code
+    // Returns the register containing the result (for expressions), or null for statements
+    public String codegen(support.CodeGenerator codeGen) {
+        return null; // default: no code generation
+    }
+    
     // Decompile operation (existing method)
     abstract public void decompile(PrintWriter p, int indent);
 

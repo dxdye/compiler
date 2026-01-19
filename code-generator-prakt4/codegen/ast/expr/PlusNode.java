@@ -34,6 +34,26 @@ public class PlusNode extends BinaryExpNode {
         
         return noErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+        
+        // Generate code for left operand
+        String reg1 = myExp1.codegen(codeGen);
+        
+        // Generate code for right operand
+        String reg2 = myExp2.codegen(codeGen);
+        
+        // Perform addition
+        codeGen.emit("add " + reg1 + ", " + reg1 + ", " + reg2, "Add");
+        
+        // Free the second register
+        regAlloc.freeRegister(reg2);
+        
+        // Result is in reg1
+        return reg1;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         p.write(" (");

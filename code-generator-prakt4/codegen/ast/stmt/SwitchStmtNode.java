@@ -16,7 +16,13 @@ public class SwitchStmtNode extends StmtNode {
     public SwitchStmtNode(ExpNode exp, SwitchGroupListNode caseList) {
         myExp = exp;
         myCaseList = caseList;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write("switch (");

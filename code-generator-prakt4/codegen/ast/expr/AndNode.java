@@ -33,7 +33,47 @@ public class AndNode extends BinaryExpNode {
         }
         
         return noErrors;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+        support.LabelGenerator labelGen = codeGen.getLabelGenerator();
+        
+        // Generate labels for short-circuit evaluation
+        String[] labels = labelGen.newAndLabels();
+        String falseLabel = labels[0];
+        String endLabel = labels[1];
+        
+        String resultReg = regAlloc.allocateTemp();
+        
+        // Generate code for left operand
+        String reg1 = myExp1.codegen(codeGen);
+        
+        // If left is false, short-circuit to false
+        codeGen.emit("beq " + reg1 + ", $zero, " + falseLabel, "AND: short-circuit if left is false");
+        
+        // Free first register
+        regAlloc.freeRegister(reg1);
+        
+        // Evaluate right operand
+        String reg2 = myExp2.codegen(codeGen);
+        
+        // Result is value of right operand
+        codeGen.emit("move " + resultReg + ", " + reg2, "AND: result from right");
+        regAlloc.freeRegister(reg2);
+        codeGen.emit("j " + endLabel, "Jump to end");
+        
+        // False label
+        codeGen.emitLabel(falseLabel);
+        codeGen.emit("li " + resultReg + ", 0", "AND: result is false");
+        
+        // End label
+        codeGen.emitLabel(endLabel);
+        
+        return resultReg;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write(" (");

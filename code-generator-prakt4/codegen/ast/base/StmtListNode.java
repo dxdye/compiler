@@ -48,6 +48,20 @@ public class StmtListNode extends ASTnode {
         
         return noErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        try {
+            for (myStmts.start(); myStmts.isCurrent(); myStmts.advance()) {
+                StmtNode stmt = (StmtNode) myStmts.getCurrent();
+                stmt.codegen(codeGen);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in StmtListNode.codegen");
+            System.exit(-1);
+        }
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         for (myStmts.start(); myStmts.isCurrent();) {

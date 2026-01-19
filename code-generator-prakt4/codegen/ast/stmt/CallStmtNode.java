@@ -18,7 +18,13 @@ public class CallStmtNode extends StmtNode {
     public CallStmtNode(IdNode id) {
         myId = id;
         myExpList = new ExpListNode(new Sequence());
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         myId.decompile(p, indent);

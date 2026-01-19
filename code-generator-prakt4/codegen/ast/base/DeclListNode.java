@@ -48,6 +48,20 @@ public class DeclListNode extends ASTnode {
         
         return noErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        try {
+            for (myDecls.start(); myDecls.isCurrent(); myDecls.advance()) {
+                DeclNode decl = (DeclNode) myDecls.getCurrent();
+                decl.codegen(codeGen);
+            }
+        } catch (NoCurrentException ex) {
+            System.err.println("unexpected NoCurrentException in DeclListNode.codegen");
+            System.exit(-1);
+        }
+        return null;
+    }
 
     public void decompile(PrintWriter p, int indent) {
         try {

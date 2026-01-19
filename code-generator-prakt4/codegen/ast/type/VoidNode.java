@@ -15,7 +15,13 @@ public class VoidNode extends TypeNode {
 
     public String getTypeName() {
         return "void";
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.print("void");

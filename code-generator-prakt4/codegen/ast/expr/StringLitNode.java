@@ -27,7 +27,13 @@ public class StringLitNode extends ExpNode {
     public boolean typecheck() {
         // Type is set in constructor
         return true;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write("\"");

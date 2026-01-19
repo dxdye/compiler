@@ -48,7 +48,13 @@ public class FormalDeclNode extends DeclNode {
     
     public IdNode getId() {
         return myId;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        return null;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         myType.decompile(p, indent);

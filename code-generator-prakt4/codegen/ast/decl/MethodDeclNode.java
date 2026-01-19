@@ -69,6 +69,48 @@ public class MethodDeclNode extends DeclNode {
         
         return noErrors;
     }
+    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        String methodName = myId.getNameOfId();
+        support.LabelGenerator labelGen = codeGen.getLabelGenerator();
+        
+        // Reset locals for new method
+        codeGen.resetLocals();
+        
+        // Generate method label
+        String methodLabel = labelGen.getMethodLabel(methodName);
+        codeGen.emitLabel(methodLabel);
+        codeGen.emitComment("Method: " + methodName);
+        
+        // Method prologue: save return address and set up stack frame
+        codeGen.emit("sw $ra, 0($sp)", "Save return address");
+        codeGen.emit("sw $fp, -4($sp)", "Save old frame pointer");
+        codeGen.emit("move $fp, $sp", "Set up frame pointer");
+        codeGen.emit("addiu $sp, $sp, -8", "Allocate space for RA and FP");
+        
+        // Handle parameters (they're in $a0-$a3 or on stack)
+        int paramOffset = 8; // Parameters start after saved FP and RA
+        if (myFormalsList != null) {
+            // Parameters are handled in the formals list
+            myFormalsList.codegen(codeGen);
+        }
+        
+        // Generate code for method body
+        myBody.codegen(codeGen);
+        
+        // Method epilogue (if no return statement at end)
+        int frameSize = codeGen.getFrameSize() + 8; // Include RA and FP
+        codeGen.emitLabel(methodLabel + "_exit");
+        codeGen.emit("move $sp, $fp", "Restore stack pointer");
+        codeGen.emit("lw $fp, -4($sp)", "Restore frame pointer");
+        codeGen.emit("lw $ra, 0($sp)", "Restore return address");
+        codeGen.emit("addiu $sp, $sp, " + frameSize, "Deallocate frame");
+        codeGen.emit("jr $ra", "Return from method");
+        codeGen.emit("");
+        
+        return null;
+    }
 
     public IdNode getId() {
         return myId;

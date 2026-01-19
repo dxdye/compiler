@@ -30,7 +30,21 @@ public class NotNode extends UnaryExpNode {
         }
         
         return noErrors;
+    }    
+    @Override
+    public String codegen(support.CodeGenerator codeGen) {
+        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+        
+        // Generate code for operand
+        String reg = myExp.codegen(codeGen);
+        
+        // Negate boolean: XOR with 1
+        codeGen.emit("xori " + reg + ", " + reg + ", 1", "Boolean NOT");
+        
+        return reg;
     }
+
+
 
     public void decompile(PrintWriter p, int indent) {
         p.write("!");
