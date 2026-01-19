@@ -3,6 +3,12 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 import java_cup.runtime.*;
+import support.*;
+import ast.base.*;
+import ast.decl.*;
+import ast.type.*;
+import ast.stmt.*;
+import ast.expr.*;
 
 // **********************************************************************
 // Main program to test the simple parser.
@@ -48,9 +54,6 @@ public class P4 {
     parser P = new parser();
     P.setScanner(new Yylex(inFile));
 
-    // symbol
-    // tables
-
     Symbol root = null; // the parser will return a Symbol whose value
                         // field's type is the type associated with the
                         // root nonterminal (i.e., with the nonterminal
@@ -63,6 +66,32 @@ public class P4 {
       System.out.println(ex);
       System.exit(0);
     }
+
+    // Create a symbol table for name checking
+    SymbolTable globalSymbolTable = new SymbolTable();
+    
+    // Perform name checking
+    System.out.println("\n=== Name Checking ===");
+    boolean nameCheckSuccess = ((ASTnode) root.value).namecheck(globalSymbolTable);
+    
+    if (!nameCheckSuccess) {
+      System.err.println("\nName checking failed.");
+      System.exit(-1);
+    }
+    System.out.println("Name checking passed.");
+    
+    // Perform type checking
+    System.out.println("\n=== Type Checking ===");
+    boolean typeCheckSuccess = ((ASTnode) root.value).typecheck();
+    
+    if (!typeCheckSuccess) {
+      System.err.println("\nType checking failed.");
+      System.exit(-1);
+    }
+    System.out.println("Type checking passed.");
+    
+    // Decompile the AST
+    System.out.println("\n=== Decompiling ===");
     ((ASTnode) root.value).decompile(outFile, 0);
     outFile.close();
 

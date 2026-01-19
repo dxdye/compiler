@@ -1,0 +1,8 @@
+*.swp
+*.png
+*.class 
+*.py
+
+*.out
+summary
+*.md

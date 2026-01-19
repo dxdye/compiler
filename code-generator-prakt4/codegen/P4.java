@@ -1,0 +1,122 @@
+import java.io.*;
+import java.util.Hashtable;
+import java.util.LinkedList;
+
+import java_cup.runtime.*;
+import support.*;
+import ast.base.*;
+import ast.decl.*;
+import ast.type.*;
+import ast.stmt.*;
+import ast.expr.*;
+
+// **********************************************************************
+// Main program to test the simple parser.
+//
+// There should be 2 command-line arguments:
+//    1. the file to be parsed
+//    2. the output file into which the AST built by the parser should be
+//       decompiled
+// The program opens the two files, creates a scanner and a parser, and
+// calls the parser.  If the parse is successful, the AST is decompiled.
+// **********************************************************************
+
+// shut up message about parser creation
+@SuppressWarnings("deprecation")
+public class P4 {
+  public static void main(String[] args)
+      throws IOException // may be thrown by the scanner
+  {
+    // check for command-line args
+    if (args.length != 2) {
+      System.err.println("please supply name of file to be parsed and name of file for decompiled version.");
+      System.exit(-1);
+    }
+
+    // open input file
+    FileReader inFile = null;
+    try {
+      inFile = new FileReader(args[0]);
+    } catch (FileNotFoundException ex) {
+      System.err.println("File " + args[0] + " not found.");
+      System.exit(-1);
+    }
+
+    // open output file (for decompilation)
+    PrintWriter outFile = null;
+    try {
+      outFile = IO.openOutputFile(args[1]);
+    } catch (IOException ex) {
+      System.err.println("File " + args[1] + " could not be opened.");
+      System.exit(-1);
+    }
+    
+    // open assembly output file
+    PrintWriter asmFile = null;
+    try {
+      String asmFileName = args[1].replace(".decompiled", ".asm");
+      if (asmFileName.equals(args[1])) {
+        asmFileName = args[1] + ".asm";
+      }
+      asmFile = IO.openOutputFile(asmFileName);
+      System.out.println("Assembly output will be written to: " + asmFileName);
+    } catch (IOException ex) {
+      System.err.println("Assembly output file could not be opened.");
+      System.exit(-1);
+    }
+
+    parser P = new parser();
+    P.setScanner(new Yylex(inFile));
+
+    Symbol root = null; // the parser will return a Symbol whose value
+                        // field's type is the type associated with the
+                        // root nonterminal (i.e., with the nonterminal
+                        // "program")
+
+    try {
+      root = P.parse(); // do the parse
+      System.out.println("Simple program parsed correctly.");
+    } catch (Exception ex) {
+      System.out.println(ex);
+      System.exit(0);
+    }
+
+    // Create a symbol table for name checking
+    SymbolTable globalSymbolTable = new SymbolTable();
+    
+    // Perform name checking
+    System.out.println("\n=== Name Checking ===");
+    boolean nameCheckSuccess = ((ASTnode) root.value).namecheck(globalSymbolTable);
+    
+    if (!nameCheckSuccess) {
+      System.err.println("\nName checking failed.");
+      System.exit(-1);
+    }
+    System.out.println("Name checking passed.");
+    
+    // Perform type checking
+    System.out.println("\n=== Type Checking ===");
+    boolean typeCheckSuccess = ((ASTnode) root.value).typecheck();
+    
+    if (!typeCheckSuccess) {
+      System.err.println("\nType checking failed.");
+      System.exit(-1);
+    }
+    System.out.println("Type checking passed.");
+    
+    // Decompile the AST
+    System.out.println("\n=== Decompiling ===");
+    ((ASTnode) root.value).decompile(outFile, 0);
+    outFile.close();
+    
+    // Generate MIPS assembly code
+    System.out.println("\n=== Code Generation ===");
+    CodeGenerator codeGen = new CodeGenerator(asmFile);
+    ((ASTnode) root.value).codegen(codeGen);
+    codeGen.finalizeCode();
+    asmFile.close();
+    System.out.println("Code generation completed.");
+
+    return;
+  }
+}
