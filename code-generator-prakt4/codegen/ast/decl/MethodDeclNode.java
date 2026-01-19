@@ -83,30 +83,56 @@ public class MethodDeclNode extends DeclNode {
         codeGen.emitLabel(methodLabel);
         codeGen.emitComment("Method: " + methodName);
         
-        // Method prologue: save return address and set up stack frame
-        codeGen.emit("sw $ra, 0($sp)", "Save return address");
-        codeGen.emit("sw $fp, -4($sp)", "Save old frame pointer");
-        codeGen.emit("move $fp, $sp", "Set up frame pointer");
-        codeGen.emit("addiu $sp, $sp, -8", "Allocate space for RA and FP");
+        // MIPS ABI-compliant prologue:
+        // Reserve minimum 8 bytes for RA + FP
+        // We'll adjust this later if needed
+        int savedRegsSize = 8; // RA (4 bytes) + FP (4 bytes)
+        
+        // Placeholder - we need to know total frame size
+        // For proper ABI compliance, we should do two-pass or estimate
+        // For now, we'll use a conservative approach:
         
         // Handle parameters (they're in $a0-$a3 or on stack)
-        int paramOffset = 8; // Parameters start after saved FP and RA
         if (myFormalsList != null) {
-            // Parameters are handled in the formals list
-            myFormalsList.codegen(codeGen);
+            // Parameters would be saved to locals here
+            // myFormalsList.codegen(codeGen);
         }
         
-        // Generate code for method body
-        myBody.codegen(codeGen);
+        // Generate code for method body (this allocates locals)
+        if (myBody != null) {
+            // myBody.codegen(codeGen);
+        }
         
-        // Method epilogue (if no return statement at end)
-        int frameSize = codeGen.getFrameSize() + 8; // Include RA and FP
+        // Calculate total frame size (must be 8-byte aligned per MIPS ABI)
+        int localsSize = codeGen.getFrameSize();
+        int totalFrameSize = localsSize + savedRegsSize;
+        
+        // Ensure 8-byte alignment
+        if (totalFrameSize % 8 != 0) {
+            totalFrameSize = ((totalFrameSize / 8) + 1) * 8;
+        }
+        
+        // Emit MIPS ABI-compliant prologue
+        codeGen.emitComment("Prologue (MIPS ABI compliant)");
+        codeGen.emit("addiu $sp, $sp, -" + totalFrameSize, "Allocate frame (" + totalFrameSize + " bytes)");
+        codeGen.emit("sw $ra, " + (totalFrameSize - 4) + "($sp)", "Save return address");
+        codeGen.emit("sw $fp, " + (totalFrameSize - 8) + "($sp)", "Save frame pointer");
+        codeGen.emit("addiu $fp, $sp, " + totalFrameSize, "FP points to old SP");
+        codeGen.emit("");
+        
+        // Method body code goes here
+        codeGen.emitComment("Method body");
+        if (myBody != null) {
+            myBody.codegen(codeGen);
+        }
+        
+        // Method epilogue
+        codeGen.emitComment("Epilogue");
         codeGen.emitLabel(methodLabel + "_exit");
-        codeGen.emit("move $sp, $fp", "Restore stack pointer");
-        codeGen.emit("lw $fp, -4($sp)", "Restore frame pointer");
-        codeGen.emit("lw $ra, 0($sp)", "Restore return address");
-        codeGen.emit("addiu $sp, $sp, " + frameSize, "Deallocate frame");
-        codeGen.emit("jr $ra", "Return from method");
+        codeGen.emit("lw $ra, " + (totalFrameSize - 4) + "($sp)", "Restore return address");
+        codeGen.emit("lw $fp, " + (totalFrameSize - 8) + "($sp)", "Restore frame pointer");
+        codeGen.emit("addiu $sp, $sp, " + totalFrameSize, "Deallocate frame");
+        codeGen.emit("jr $ra", "Return");
         codeGen.emit("");
         
         return null;

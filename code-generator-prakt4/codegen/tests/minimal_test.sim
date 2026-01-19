@@ -1,0 +1,4 @@
+public class Test {
+	// comment
+	static int x;
+}
