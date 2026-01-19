@@ -194,13 +194,13 @@ test-codegen-simple: tests/simple_correct.sim P4.class
 	@echo "=========================================="
 	java -cp $(CLASSPATH) P4 tests/simple_correct.sim tests/simple_correct.out
 	@if [ -f tests/simple_correct.out.asm ]; then \
-		echo "✓ Generated tests/simple_correct.out.asm"; \
+		echo "[PASS] Generated tests/simple_correct.out.asm"; \
 		echo "  Lines:" `wc -l < tests/simple_correct.out.asm`; \
 		echo ""; \
 		echo "First 25 lines of generated MIPS:"; \
 		head -25 tests/simple_correct.out.asm; \
 	else \
-		echo "✗ Failed to generate assembly file"; \
+		echo "[FAIL] Failed to generate assembly file"; \
 		exit 1; \
 	fi
 	@echo ""
@@ -212,10 +212,10 @@ test-codegen-comprehensive: tests/comprehensive_test.sim P4.class
 	@echo "=========================================="
 	java -cp $(CLASSPATH) P4 tests/comprehensive_test.sim tests/comprehensive_test.out
 	@if [ -f tests/comprehensive_test.out.asm ]; then \
-		echo "✓ Generated tests/comprehensive_test.out.asm"; \
+		echo "[PASS] Generated tests/comprehensive_test.out.asm"; \
 		echo "  Lines:" `wc -l < tests/comprehensive_test.out.asm`; \
 	else \
-		echo "✗ Failed to generate assembly file"; \
+		echo "[FAIL] Failed to generate assembly file"; \
 		exit 1; \
 	fi
 	@echo ""
@@ -228,10 +228,10 @@ test-codegen-correct: tests/test_correct2.sim P4.class
 	@echo "Note: test_correct.sim skipped (contains unsupported features: **, double negation, etc.)"
 	java -cp $(CLASSPATH) P4 tests/test_correct2.sim tests/test_correct2.out
 	@if [ -f tests/test_correct2.out.asm ]; then \
-		echo "✓ Generated tests/test_correct2.out.asm"; \
+		echo "[PASS] Generated tests/test_correct2.out.asm"; \
 		echo "  Lines:" `wc -l < tests/test_correct2.out.asm`; \
 	else \
-		echo "✗ Failed to generate assembly file"; \
+		echo "[FAIL] Failed to generate assembly file"; \
 		exit 1; \
 	fi
 	@echo ""
@@ -239,7 +239,7 @@ test-codegen-correct: tests/test_correct2.sim P4.class
 # Run all code generation tests
 test-codegen: test-codegen-simple test-codegen-comprehensive
 	@echo "=========================================="
-	@echo "All code generation tests PASSED ✓"
+	@echo "All code generation tests PASSED"
 	@echo "Note: test_correct.sim and test_correct2.sim skipped"
 	@echo "      (contain unsupported features: **, Windows line endings, etc.)"
 	@echo "=========================================="
@@ -252,24 +252,24 @@ test-abi: tests/simple_correct.sim P4.class
 	@java -cp $(CLASSPATH) P4 tests/simple_correct.sim tests/abi_test.out
 	@echo "Checking for proper stack frame setup..."
 	@if grep -q "addiu.*\$$sp.*-" tests/abi_test.out.asm; then \
-		echo "✓ Stack allocation found"; \
+		echo "[PASS] Stack allocation found"; \
 	else \
-		echo "✗ Missing stack allocation"; \
+		echo "[FAIL] Missing stack allocation"; \
 	fi
 	@if grep -q "sw.*\$$ra" tests/abi_test.out.asm; then \
-		echo "✓ Return address saved"; \
+		echo "[PASS] Return address saved"; \
 	else \
-		echo "✗ Missing RA save"; \
+		echo "[FAIL] Missing RA save"; \
 	fi
 	@if grep -q "sw.*\$$fp" tests/abi_test.out.asm; then \
-		echo "✓ Frame pointer saved"; \
+		echo "[PASS] Frame pointer saved"; \
 	else \
-		echo "✗ Missing FP save"; \
+		echo "[FAIL] Missing FP save"; \
 	fi
 	@if grep -q "jr.*\$$ra" tests/abi_test.out.asm; then \
-		echo "✓ Proper return instruction"; \
+		echo "[PASS] Proper return instruction"; \
 	else \
-		echo "✗ Missing proper return"; \
+		echo "[FAIL] Missing proper return"; \
 	fi
 	@echo ""
 
