@@ -40,8 +40,11 @@ may be incompatible in the simple language. The compiler needs to recognize that
 
 Example (name-error): 
 ```c
+// in simple language..
 int a; 
-int b = b < a; // b was not defined before
+a = 5
+int b; 
+a = b < a; // b was not defined before
 ```
 
 In this example we will have a name error, since b is used before it was defined.
