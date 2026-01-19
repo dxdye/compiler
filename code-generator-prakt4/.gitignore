@@ -3,5 +3,5 @@
 *.class 
 *.py
 
-summary
 *.out
+summary
