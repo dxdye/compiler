@@ -28,6 +28,11 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
     
+    - name: Install JFlex and Java Cup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jflex default-jdk-headless
+    
     - name: Clean Build ${{ matrix.project.name }}
       working-directory: ${{ matrix.project.path }}
       run: |
