@@ -1,0 +1,47 @@
+name: Run Code Generator Tests
+
+on:
+  push:
+    branches: [ main, refactor/use-accumulator-machine ]
+  pull_request:
+    branches: [ main, refactor/use-accumulator-machine ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Display Java version
+      run: java -version
+    
+    - name: Run simple test
+      working-directory: ./codegen
+      run: make test-simple
+    
+    - name: Run comprehensive test
+      working-directory: ./codegen
+      run: make test-comprehensive
+    
+    - name: Run method test
+      working-directory: ./codegen
+      run: |
+        java -cp .:classes:../jars/java-cup-11b-runtime.jar P4 tests/very_simple_method_test.sim tests/very_simple_method_test.out
+        echo "✓ Method call test passed"
+    
+    - name: Display generated assembly
+      if: always()
+      working-directory: ./codegen
+      run: |
+        echo "=== simple_correct.out.asm ==="
+        head -30 tests/simple_correct.out.asm || true
+        echo ""
+        echo "=== very_simple_method_test.out.asm ==="
+        head -30 tests/very_simple_method_test.out.asm || true
