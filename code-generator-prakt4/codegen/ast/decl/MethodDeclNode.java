@@ -80,6 +80,8 @@ public class MethodDeclNode extends DeclNode {
         
         // Generate method label
         String methodLabel = labelGen.getMethodLabel(methodName);
+        String exitLabel = methodLabel + "_exit";
+        
         codeGen.emitLabel(methodLabel);
         codeGen.emitComment("Method: " + methodName);
         
@@ -88,23 +90,17 @@ public class MethodDeclNode extends DeclNode {
         // We'll adjust this later if needed
         int savedRegsSize = 8; // RA (4 bytes) + FP (4 bytes)
         
-        // Placeholder - we need to know total frame size
-        // For proper ABI compliance, we should do two-pass or estimate
-        // For now, we'll use a conservative approach:
-        
         // Handle parameters (they're in $a0-$a3 or on stack)
+        int paramCount = 0;
         if (myFormalsList != null) {
-            // Parameters would be saved to locals here
-            // myFormalsList.codegen(codeGen);
+            paramCount = myFormalsList.getParamCount();
+            // For now, we'll handle basic parameter copying
+            // TODO: Implement proper parameter handling with symbol table lookup
         }
         
-        // Generate code for method body (this allocates locals)
-        if (myBody != null) {
-            // myBody.codegen(codeGen);
-        }
-        
-        // Calculate total frame size (must be 8-byte aligned per MIPS ABI)
-        int localsSize = codeGen.getFrameSize();
+        // For now, estimate frame size (basic approach)
+        // In a full implementation, we'd need a two-pass approach
+        int localsSize = 32; // Conservative estimate for locals
         int totalFrameSize = localsSize + savedRegsSize;
         
         // Ensure 8-byte alignment
@@ -112,7 +108,7 @@ public class MethodDeclNode extends DeclNode {
             totalFrameSize = ((totalFrameSize / 8) + 1) * 8;
         }
         
-        // Emit MIPS ABI-compliant prologue
+        // Emit MIPS ABI-compliant prologue FIRST
         codeGen.emitComment("Prologue (MIPS ABI compliant)");
         codeGen.emit("addiu $sp, $sp, -" + totalFrameSize, "Allocate frame (" + totalFrameSize + " bytes)");
         codeGen.emit("sw $ra, " + (totalFrameSize - 4) + "($sp)", "Save return address");
@@ -120,7 +116,14 @@ public class MethodDeclNode extends DeclNode {
         codeGen.emit("addiu $fp, $sp, " + totalFrameSize, "FP points to old SP");
         codeGen.emit("");
         
-        // Method body code goes here
+        // Copy parameters from registers to local variables
+        if (myFormalsList != null && paramCount > 0) {
+            codeGen.emitComment("Copy parameters to locals");
+            // For basic implementation, parameters will be handled by variable lookups
+            // The formal parameters are already in the symbol table as locals
+        }
+        
+        // Generate code for method body 
         codeGen.emitComment("Method body");
         if (myBody != null) {
             myBody.codegen(codeGen);
@@ -128,7 +131,7 @@ public class MethodDeclNode extends DeclNode {
         
         // Method epilogue
         codeGen.emitComment("Epilogue");
-        codeGen.emitLabel(methodLabel + "_exit");
+        codeGen.emitLabel(exitLabel);
         codeGen.emit("lw $ra, " + (totalFrameSize - 4) + "($sp)", "Restore return address");
         codeGen.emit("lw $fp, " + (totalFrameSize - 8) + "($sp)", "Restore frame pointer");
         codeGen.emit("addiu $sp, $sp, " + totalFrameSize, "Deallocate frame");

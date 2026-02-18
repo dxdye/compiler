@@ -152,6 +152,28 @@ public class CodeGenerator {
     }
     
     /**
+     * Load immediate value into register without pseudoinstructions
+     */
+    public void loadImmediateToReg(String reg, int value, String comment) {
+        if (value >= -32768 && value <= 32767) {
+            // Can use addiu with $zero
+            emit("addiu " + reg + ", $zero, " + value, comment);
+        } else {
+            // Need to use lui and ori for larger values
+            int upper = (value >>> 16) & 0xFFFF;
+            int lower = value & 0xFFFF;
+            if (upper != 0) {
+                emit("lui " + reg + ", " + upper, comment + " (upper bits)");
+                if (lower != 0) {
+                    emit("ori " + reg + ", " + reg + ", " + lower, comment + " (lower bits)");
+                }
+            } else {
+                emit("ori " + reg + ", $zero, " + lower, comment);
+            }
+        }
+    }
+    
+    /**
      * Add a static variable to data segment
      */
     public void addStaticVariable(String name, DataType type) {

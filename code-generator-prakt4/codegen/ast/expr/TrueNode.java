@@ -29,13 +29,22 @@ public class TrueNode extends ExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        String reg = regAlloc.allocateTemp();
-        
-        // Load true (1) into register
-        codeGen.emit("li " + reg + ", 1", "Load boolean true");
-        
-        return reg;
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            // Load true (1) into accumulator
+            accGen.loadImmediate(1, "Load boolean true");
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            String reg = regAlloc.allocateTemp();
+            
+            // Load true (1) into register
+            codeGen.emit("li " + reg + ", 1", "Load boolean true");
+            
+            return reg;
+        }
     }
 
 

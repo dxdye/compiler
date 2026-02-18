@@ -72,6 +72,16 @@ public class ExpListNode extends ASTnode {
         p.write(")");
     }
 
+    // Getter method for accessing the sequence
+    public Sequence getSequence() {
+        return myExps;
+    }
+    
+    // Get number of arguments
+    public int getNumArgs() {
+        return myExps.length();
+    }
+
     // sequence of kids (ExpNodes)
     private Sequence myExps;
 }

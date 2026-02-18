@@ -1,0 +1,35 @@
+public class ControlFlowTest {
+    static int x;
+    static int y;
+    static boolean flag;
+    
+    public static void main() {
+        int a;
+        int b;
+        int i;
+        
+        a = 5;
+        b = 10;
+        
+        // Test if-else
+        if (a < b) {
+            x = a + b;
+        } else {
+            x = a - b;
+        }
+        
+        // Test while loop
+        i = 0;
+        while (i < 3) {
+            y = y + i;
+            i = i + 1;
+        }
+        
+        // Test simple if
+        if (x > 0) {
+            println(x);
+        }
+        
+        println(y);
+    }
+}

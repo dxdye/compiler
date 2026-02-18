@@ -36,23 +36,48 @@ public class DivideNode extends BinaryExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        
-        // Generate code for left operand
-        String reg1 = myExp1.codegen(codeGen);
-        
-        // Generate code for right operand
-        String reg2 = myExp2.codegen(codeGen);
-        
-        // Perform division
-        codeGen.emit("div " + reg1 + ", " + reg2, "Divide");
-        codeGen.emit("mflo " + reg1, "Get quotient");
-        
-        // Free the second register
-        regAlloc.freeRegister(reg2);
-        
-        // Result is in reg1
-        return reg1;
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            
+            // Generate code for left operand (result in $a0)
+            myExp1.codegen(codeGen);
+            
+            // Push left operand result to stack
+            accGen.pushAccumulator("Push left operand");
+            
+            // Generate code for right operand (result in $a0)
+            myExp2.codegen(codeGen);
+            
+            // Pop left operand from stack to $t1
+            accGen.popToTemp();
+            
+            // Perform division: dividend in $t1, divisor in $a0
+            codeGen.emit("div " + support.AccumulatorCodeGenerator.TEMP_RESULT + ", " + support.AccumulatorCodeGenerator.ACCUMULATOR, "Divide: " + support.AccumulatorCodeGenerator.TEMP_RESULT + " / " + support.AccumulatorCodeGenerator.ACCUMULATOR);
+            codeGen.emit("mflo " + support.AccumulatorCodeGenerator.ACCUMULATOR, "Get quotient to accumulator");
+            
+            // Result is in accumulator
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            
+            // Generate code for left operand
+            String reg1 = myExp1.codegen(codeGen);
+            
+            // Generate code for right operand
+            String reg2 = myExp2.codegen(codeGen);
+            
+            // Perform division
+            codeGen.emit("div " + reg1 + ", " + reg2, "Divide");
+            codeGen.emit("mflo " + reg1, "Get quotient");
+            
+            // Free the second register
+            regAlloc.freeRegister(reg2);
+            
+            // Result is in reg1
+            return reg1;
+        }
     }
 
 

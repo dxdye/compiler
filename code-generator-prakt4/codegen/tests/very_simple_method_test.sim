@@ -1,0 +1,12 @@
+public class VerySimpleMethodTest {
+    static int x;
+    
+    public static void main() {
+        helper();
+        System.out.println(x);
+    }
+    
+    public static void helper() {
+        x = 42;
+    }
+}

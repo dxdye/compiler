@@ -109,9 +109,9 @@ public class P4 {
     ((ASTnode) root.value).decompile(outFile, 0);
     outFile.close();
     
-    // Generate MIPS assembly code
+    // Generate MIPS assembly code using AccumulatorCodeGenerator
     System.out.println("\n=== Code Generation ===");
-    CodeGenerator codeGen = new CodeGenerator(asmFile);
+    support.AccumulatorCodeGenerator codeGen = new support.AccumulatorCodeGenerator(asmFile);
     ((ASTnode) root.value).codegen(codeGen);
     codeGen.finalizeCode();
     asmFile.close();

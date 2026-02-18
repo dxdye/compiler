@@ -28,7 +28,8 @@ public class ParenthesizedExpNode extends ExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        return null;
+        // Simply delegate to the wrapped expression
+        return myExp.codegen(codeGen);
     }
 
 

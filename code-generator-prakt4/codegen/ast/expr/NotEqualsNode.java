@@ -37,23 +37,48 @@ public class NotEqualsNode extends BinaryExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        
-        // Generate code for left operand
-        String reg1 = myExp1.codegen(codeGen);
-        
-        // Generate code for right operand
-        String reg2 = myExp2.codegen(codeGen);
-        
-        // Perform inequality check: XOR and check if non-zero
-        codeGen.emit("xor " + reg1 + ", " + reg1 + ", " + reg2, "XOR for inequality");
-        codeGen.emit("sltu " + reg1 + ", $zero, " + reg1, "Set if not equal (result != 0)");
-        
-        // Free the second register
-        regAlloc.freeRegister(reg2);
-        
-        // Result (0 or 1) is in reg1
-        return reg1;
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            // Generate code for left operand (result in $a0)
+            myExp1.codegen(codeGen);
+            
+            // Push left operand result to stack
+            codeGen.emit("addi $sp, $sp, -4", "Allocate stack space");
+            codeGen.emit("sw " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", 0($sp)", "Push left operand");
+            
+            // Generate code for right operand (result in $a0)
+            myExp2.codegen(codeGen);
+            
+            // Pop left operand from stack to $t1
+            codeGen.emit("lw " + support.AccumulatorCodeGenerator.TEMP_RESULT + ", 0($sp)", "Pop previous result to temp");
+            codeGen.emit("addi $sp, $sp, 4", "Deallocate stack space");
+            
+            // Perform inequality check: XOR and check if non-zero
+            codeGen.emit("xor " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", " + support.AccumulatorCodeGenerator.TEMP_RESULT + ", " + support.AccumulatorCodeGenerator.ACCUMULATOR, "XOR for inequality");
+            codeGen.emit("sltu " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", $zero, " + support.AccumulatorCodeGenerator.ACCUMULATOR, "Set if not equal (result != 0)");
+            
+            // Result is in accumulator
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            
+            // Generate code for left operand
+            String reg1 = myExp1.codegen(codeGen);
+            
+            // Generate code for right operand
+            String reg2 = myExp2.codegen(codeGen);
+            
+            // Perform inequality check: XOR and check if non-zero
+            codeGen.emit("xor " + reg1 + ", " + reg1 + ", " + reg2, "XOR for inequality");
+            codeGen.emit("sltu " + reg1 + ", $zero, " + reg1, "Set if not equal (result != 0)");
+            
+            // Free the second register
+            regAlloc.freeRegister(reg2);
+            
+            // Result (0 or 1) is in reg1
+            return reg1;
+        }
     }
 
 

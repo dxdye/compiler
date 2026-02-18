@@ -1,0 +1,18 @@
+public class SimpleMethodTest {
+    static int x;
+    
+    public static void main() {
+        int result;
+        helper();
+        result = getValue();
+        System.out.println(result);
+    }
+    
+    public static void helper() {
+        x = 42;
+    }
+    
+    public static int getValue() {
+        return x;
+    }
+}

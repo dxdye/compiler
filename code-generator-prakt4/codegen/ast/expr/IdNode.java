@@ -53,24 +53,44 @@ public class IdNode extends ExpNode {
     
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        String reg = regAlloc.allocateTemp();
-        
-        // Check if it's a local variable or static field
-        Integer localOffset = codeGen.getLocalOffset(myStrVal);
-        
-        if (localOffset != null) {
-            // Local variable - load from stack
-            codeGen.emit("lw " + reg + ", " + localOffset + "($fp)", 
-                        "Load local " + myStrVal);
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            // Check if it's a local variable or static field
+            Integer localOffset = codeGen.getLocalOffset(myStrVal);
+            
+            if (localOffset != null) {
+                // Local variable - load from stack to accumulator
+                codeGen.emit("lw " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", " + localOffset + "($fp)", 
+                            "Load local " + myStrVal + " to accumulator");
+            } else {
+                // Static field - load from data segment to accumulator
+                String label = codeGen.getStaticVarLabel(myStrVal);
+                codeGen.emit("lw " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", " + label, 
+                            "Load static " + myStrVal + " to accumulator");
+            }
+            
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
         } else {
-            // Static field - load from data segment
-            String label = codeGen.getStaticVarLabel(myStrVal);
-            codeGen.emit("lw " + reg + ", " + label, 
-                        "Load static " + myStrVal);
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            String reg = regAlloc.allocateTemp();
+            
+            // Check if it's a local variable or static field
+            Integer localOffset = codeGen.getLocalOffset(myStrVal);
+            
+            if (localOffset != null) {
+                // Local variable - load from stack
+                codeGen.emit("lw " + reg + ", " + localOffset + "($fp)", 
+                            "Load local " + myStrVal);
+            } else {
+                // Static field - load from data segment
+                String label = codeGen.getStaticVarLabel(myStrVal);
+                codeGen.emit("lw " + reg + ", " + label, 
+                            "Load static " + myStrVal);
+            }
+            
+            return reg; // Return register containing the value
         }
-        
-        return reg; // Return register containing the value
     }
 
     public void decompile(PrintWriter p, int indent) {

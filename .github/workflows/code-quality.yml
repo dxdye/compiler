@@ -1,0 +1,98 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, feat/*, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-check:
+    name: Build All Projects
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        project:
+          - { name: "Lexer", path: "lexer-prakt1/scanner" }
+          - { name: "Parser", path: "parser-prakt2/parser" }
+          - { name: "Semantic", path: "semantic-analysis-prakt3/typechecker" }
+          - { name: "CodeGen", path: "code-generator-prakt4/codegen" }
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Clean Build ${{ matrix.project.name }}
+      working-directory: ${{ matrix.project.path }}
+      run: |
+        make clean
+        make
+        echo "[PASS] ${{ matrix.project.name }} builds successfully"
+    
+    - name: Check for Compilation Warnings
+      working-directory: ${{ matrix.project.path }}
+      run: |
+        make clean
+        make 2>&1 | tee build.log
+        if grep -i "warning" build.log; then
+          echo "Warnings found, but continuing..."
+        fi
+        echo "[INFO] Build check completed"
+
+  file-structure:
+    name: Verify Project Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Required Files
+      run: |
+        echo "Checking project structure..."
+        
+        # Check lexer
+        [ -f "lexer-prakt1/scanner/simple.jlex" ] && echo "[PASS] Lexer JFlex file exists" || exit 1
+        [ -f "lexer-prakt1/scanner/P2.java" ] && echo "[PASS] Lexer main exists" || exit 1
+        
+        # Check parser
+        [ -f "parser-prakt2/parser/simple.cup" ] && echo "[PASS] Parser CUP file exists" || exit 1
+        [ -f "parser-prakt2/parser/P3.java" ] && echo "[PASS] Parser main exists" || exit 1
+        
+        # Check semantic analyzer
+        [ -f "semantic-analysis-prakt3/typechecker/simple.cup" ] && echo "[PASS] Type checker CUP file exists" || exit 1
+        [ -d "semantic-analysis-prakt3/typechecker/ast" ] && echo "[PASS] AST directory exists" || exit 1
+        
+        # Check code generator
+        [ -f "code-generator-prakt4/codegen/simple.cup" ] && echo "[PASS] Code gen CUP file exists" || exit 1
+        [ -d "code-generator-prakt4/codegen/ast" ] && echo "[PASS] Code gen AST exists" || exit 1
+        [ -f "code-generator-prakt4/codegen/support/CodeGenerator.java" ] && echo "[PASS] CodeGenerator exists" || exit 1
+        
+        echo "All required files present!"
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Documentation Files
+      run: |
+        echo "Checking documentation..."
+        
+        [ -f "README.md" ] && echo "[PASS] Root README exists" || echo "[WARN] Missing root README"
+        [ -f "code-generator-prakt4/codegen/README.txt" ] && echo "[PASS] CodeGen README exists" || echo "[WARN] Missing CodeGen README"
+        
+        # Check for summary docs
+        if [ -d "code-generator-prakt4/summary" ]; then
+          echo "[PASS] Summary documentation directory exists"
+          ls code-generator-prakt4/summary/*.md 2>/dev/null && echo "[INFO] Found markdown documentation" || true
+        fi
+        
+        echo "Documentation check completed"

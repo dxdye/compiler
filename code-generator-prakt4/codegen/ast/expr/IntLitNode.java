@@ -31,13 +31,22 @@ public class IntLitNode extends ExpNode {
     
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        String reg = regAlloc.allocateTemp();
-        
-        // Load immediate value into register
-        codeGen.emit("li " + reg + ", " + myIntVal, "Load integer literal " + myIntVal);
-        
-        return reg; // Return register containing the value
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            // Load immediate value into accumulator ($a0)
+            accGen.loadImmediate(myIntVal, "Load integer literal " + myIntVal);
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            String reg = regAlloc.allocateTemp();
+            
+            // Load immediate value into register
+            codeGen.emit("li " + reg + ", " + myIntVal, "Load integer literal " + myIntVal);
+            
+            return reg; // Return register containing the value
+        }
     }
 
     public void decompile(PrintWriter p, int indent) {

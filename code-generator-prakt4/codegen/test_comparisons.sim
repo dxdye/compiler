@@ -1,0 +1,49 @@
+void main() {
+    int x;
+    int y;
+    
+    x = 5;
+    y = 3;
+    
+    // Test greater than
+    if (x > y) {
+        cout << 1;
+    } else {
+        cout << 0; 
+    }
+    
+    // Test greater or equal
+    if (x >= y) {
+        cout << 1;
+    } else {
+        cout << 0;
+    }
+    
+    // Test less or equal
+    if (y <= x) {
+        cout << 1; 
+    } else {
+        cout << 0;
+    }
+    
+    // Test not equal
+    if (x != y) {
+        cout << 1;
+    } else {
+        cout << 0;
+    }
+    
+    // Test equal  
+    if (x == x) {
+        cout << 1;
+    } else {
+        cout << 0;
+    }
+    
+    // Test less than
+    if (y < x) {
+        cout << 1;
+    } else {
+        cout << 0;
+    }
+}
