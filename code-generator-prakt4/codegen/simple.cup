@@ -149,6 +149,10 @@ methodDecl	::= PUBLIC STATIC VOID id:b formals:c methodBody:d // no return value
 								{: RESULT = new MethodDeclNode(new VoidNode(), b, c, d); :} //cannot be sure that VOID:a would be a TypeNode
                 | PUBLIC STATIC INT id:b formals:c  methodBody:d // int return value allowed
 								{: RESULT = new MethodDeclNode(new IntNode() , b, c, d); :}
+                | VOID id:b formals:c methodBody:d // void method without public static
+								{: RESULT = new MethodDeclNode(new VoidNode(), b, c, d); :}
+                | INT id:b formals:c methodBody:d // int method without public static
+								{: RESULT = new MethodDeclNode(new IntNode(), b, c, d); :}
 	        ;						
 
 
