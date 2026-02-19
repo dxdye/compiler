@@ -41,30 +41,54 @@ public class PrintStmtNode extends StmtNode {
         
         DataType expType = myExp.getType();
         
-        if (expType == DataType.INT) {
-            // Print integer using syscall 1
-            codeGen.emit("move $a0, " + reg, "Prepare for print_int");
-            codeGen.emit("li $v0, 1", "Syscall for print_int");
-            codeGen.emit("syscall", "Print integer");
-        } else if (expType == DataType.BOOLEAN) {
-            // Print boolean as 0 or 1
-            codeGen.emit("move $a0, " + reg, "Prepare for print_int");
-            codeGen.emit("li $v0, 1", "Syscall for print_int");
-            codeGen.emit("syscall", "Print boolean");
-        } else if (expType == DataType.STRING) {
-            // Print string using syscall 4
-            codeGen.emit("move $a0, " + reg, "Prepare for print_string");
-            codeGen.emit("li $v0, 4", "Syscall for print_string");
-            codeGen.emit("syscall", "Print string");
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {            
+            if (expType == DataType.INT) {
+                // Expression result is already in $a0 (accumulator)
+                codeGen.emit("addiu $v0, $zero, 1", "Syscall for print_int");
+                codeGen.emit("syscall", "Print integer");
+            } else if (expType == DataType.BOOLEAN) {
+                // Expression result is already in $a0 (accumulator)
+                codeGen.emit("addiu $v0, $zero, 1", "Syscall for print_int");
+                codeGen.emit("syscall", "Print boolean");
+            } else if (expType == DataType.STRING) {
+                // Expression result is already in $a0 (accumulator)
+                codeGen.emit("addiu $v0, $zero, 4", "Syscall for print_string");
+                codeGen.emit("syscall", "Print string");
+            }
+            
+            // Print newline
+            codeGen.emit("addiu $a0, $zero, 10", "Newline character");
+            codeGen.emit("addiu $v0, $zero, 11", "Syscall for print_char");
+            codeGen.emit("syscall", "Print newline");
+            codeGen.emit("syscall", "Print newline");
+        } else {
+            // Original register-based approach
+            if (expType == DataType.INT) {
+                // Print integer using syscall 1
+                codeGen.emit("move $a0, " + reg, "Prepare for print_int");
+                codeGen.emit("li $v0, 1", "Syscall for print_int");
+                codeGen.emit("syscall", "Print integer");
+            } else if (expType == DataType.BOOLEAN) {
+                // Print boolean as 0 or 1
+                codeGen.emit("move $a0, " + reg, "Prepare for print_int");
+                codeGen.emit("li $v0, 1", "Syscall for print_int");
+                codeGen.emit("syscall", "Print boolean");
+            } else if (expType == DataType.STRING) {
+                // Print string using syscall 4
+                codeGen.emit("move $a0, " + reg, "Prepare for print_string");
+                codeGen.emit("li $v0, 4", "Syscall for print_string");
+                codeGen.emit("syscall", "Print string");
+            }
+            
+            // Print newline
+            codeGen.emit("li $a0, 10", "Newline character");
+            codeGen.emit("li $v0, 11", "Syscall for print_char");
+            codeGen.emit("syscall", "Print newline");
+            
+            // Free the register
+            codeGen.getRegisterAllocator().freeRegister(reg);
         }
-        
-        // Print newline
-        codeGen.emit("li $a0, 10", "Newline character");
-        codeGen.emit("li $v0, 11", "Syscall for print_char");
-        codeGen.emit("syscall", "Print newline");
-        
-        // Free the register
-        codeGen.getRegisterAllocator().freeRegister(reg);
         
         return null;
     }

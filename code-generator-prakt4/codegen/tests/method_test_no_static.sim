@@ -1,0 +1,15 @@
+public class MethodTestNoStatic {
+    static int globalVar;
+    
+    public static void main() {
+        int result;
+        result = addNumbers(5, 3);
+        System.out.println(result);
+    }
+    
+    int addNumbers(int a, int b) {
+        int sum;
+        sum = a + b;
+        return sum;
+    }
+}

@@ -33,7 +33,29 @@ public class UnaryMinusNode extends UnaryExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        return null;
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            
+            // Generate code for operand (result in $a0)
+            myExp.codegen(codeGen);
+            
+            // Negate the accumulator using unaryOperation (which handles neg properly)
+            accGen.unaryOperation("neg", "Negate accumulator");
+            
+            // Result is in accumulator
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            // Generate code for operand
+            String reg = myExp.codegen(codeGen);
+            
+            // Negate the register using sub from $zero (no pseudoinstructions)
+            codeGen.emit("sub " + reg + ", $zero, " + reg, "Negate");
+            
+            // Result is in same register
+            return reg;
+        }
     }
 
 

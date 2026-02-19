@@ -1,0 +1,26 @@
+public class ComprehensiveTest {
+  static int globalX;
+  static int globalY;
+  static boolean globalFlag;
+  public static void main () {
+    int x; 
+    int y; 
+    int z; 
+    boolean test; 
+    boolean flag2; 
+
+    x = 10;
+    y = 20;
+    z =  (x + y) ;
+    test = (x < y) ;
+    flag2 = (x == 10) ;
+    if ( test ) {
+      z =  (z * 2) ;
+      System.out.println(z);
+    }
+    globalX =  ( (x + y)  + z) ;
+    globalFlag =  (((x == 10) ) && ((y != 15) )) ;
+    System.out.println(globalX);
+    System.out.println(globalFlag);
+  }
+}

@@ -29,13 +29,22 @@ public class FalseNode extends ExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        String reg = regAlloc.allocateTemp();
-        
-        // Load false (0) into register
-        codeGen.emit("li " + reg + ", 0", "Load boolean false");
-        
-        return reg;
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            // Load false (0) into accumulator
+            accGen.loadImmediate(0, "Load boolean false");
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            String reg = regAlloc.allocateTemp();
+            
+            // Load false (0) into register
+            codeGen.emit("li " + reg + ", 0", "Load boolean false");
+            
+            return reg;
+        }
     }
 
 

@@ -1,0 +1,26 @@
+public class MethodCallTest {
+    static int result;
+
+    public static int getConstant() {
+        return 42;
+    }
+
+    public static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void setResult(int value) {
+        result = value;
+    }
+
+    public static void main() {
+        int x;
+        int y;
+        int sum;
+
+        x = getConstant();
+        y = 10;
+        sum = add(x, y);
+        setResult(sum);
+    }
+}

@@ -45,26 +45,47 @@ public class IfStmtNode extends StmtNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.LabelGenerator labelGen = codeGen.getLabelGenerator();
-        
-        // Generate labels for if statement
-        String[] labels = labelGen.newIfLabels();
-        String endLabel = labels[1];
-        
-        // Generate code for condition
-        String condReg = myExp.codegen(codeGen);
-        
-        // Branch if false (condition == 0)
-        codeGen.emit("beq " + condReg + ", $zero, " + endLabel, "If condition false, skip body");
-        
-        // Free condition register
-        codeGen.getRegisterAllocator().freeRegister(condReg);
-        
-        // Generate code for if body
-        myStmtList.codegen(codeGen);
-        
-        // End label
-        codeGen.emitLabel(endLabel);
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            
+            // Generate unique label for end of if using the label generator
+            String endLabel = accGen.getLabelGenerator().newLabel("if_end");
+            
+            // Generate code for condition (result in $a0)
+            myExp.codegen(codeGen);
+            
+            // Branch if false (condition == 0) - accumulator version
+            codeGen.emit("beq " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", $zero, " + endLabel, "If condition false, skip body");
+            
+            // Generate code for if body
+            myStmtList.codegen(codeGen);
+            
+            // End label
+            codeGen.emitLabel(endLabel);
+        } else {
+            // Original register-based approach
+            support.LabelGenerator labelGen = codeGen.getLabelGenerator();
+            
+            // Generate labels for if statement
+            String[] labels = labelGen.newIfLabels();
+            String endLabel = labels[1];
+            
+            // Generate code for condition
+            String condReg = myExp.codegen(codeGen);
+            
+            // Branch if false (condition == 0)
+            codeGen.emit("beq " + condReg + ", $zero, " + endLabel, "If condition false, skip body");
+            
+            // Free condition register
+            codeGen.getRegisterAllocator().freeRegister(condReg);
+            
+            // Generate code for if body
+            myStmtList.codegen(codeGen);
+            
+            // End label
+            codeGen.emitLabel(endLabel);
+        }
         
         return null;
     }

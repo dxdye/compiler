@@ -36,22 +36,46 @@ public class GreaterNode extends BinaryExpNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
-        
-        // Generate code for left operand
-        String reg1 = myExp1.codegen(codeGen);
-        
-        // Generate code for right operand
-        String reg2 = myExp2.codegen(codeGen);
-        
-        // Perform comparison: reg1 > reg2 is equivalent to reg2 < reg1
-        codeGen.emit("slt " + reg1 + ", " + reg2 + ", " + reg1, "Greater than");
-        
-        // Free the second register
-        regAlloc.freeRegister(reg2);
-        
-        // Result (0 or 1) is in reg1
-        return reg1;
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            // Generate code for left operand (result in $a0)
+            myExp1.codegen(codeGen);
+            
+            // Push left operand result to stack
+            codeGen.emit("addi $sp, $sp, -4", "Allocate stack space");
+            codeGen.emit("sw " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", 0($sp)", "Push left operand");
+            
+            // Generate code for right operand (result in $a0)
+            myExp2.codegen(codeGen);
+            
+            // Pop left operand from stack to $t1
+            codeGen.emit("lw " + support.AccumulatorCodeGenerator.TEMP_RESULT + ", 0($sp)", "Pop previous result to temp");
+            codeGen.emit("addi $sp, $sp, 4", "Deallocate stack space");
+            
+            // Perform comparison: $t1 > $a0 is equivalent to $a0 < $t1, so we reverse the comparison
+            codeGen.emit("slt " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", " + support.AccumulatorCodeGenerator.TEMP_RESULT, "Greater than: " + support.AccumulatorCodeGenerator.TEMP_RESULT + " > " + support.AccumulatorCodeGenerator.ACCUMULATOR);
+            
+            // Result is in accumulator
+            return support.AccumulatorCodeGenerator.ACCUMULATOR;
+        } else {
+            // Fallback to original register-based approach
+            support.RegisterAllocator regAlloc = codeGen.getRegisterAllocator();
+            
+            // Generate code for left operand
+            String reg1 = myExp1.codegen(codeGen);
+            
+            // Generate code for right operand
+            String reg2 = myExp2.codegen(codeGen);
+            
+            // Perform comparison: reg1 > reg2 is equivalent to reg2 < reg1
+            codeGen.emit("slt " + reg1 + ", " + reg2 + ", " + reg1, "Greater than");
+            
+            // Free the second register
+            regAlloc.freeRegister(reg2);
+            
+            // Result (0 or 1) is in reg1
+            return reg1;
+        }
     }
 
 

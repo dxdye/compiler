@@ -65,7 +65,7 @@ public class AndNode extends BinaryExpNode {
         
         // False label
         codeGen.emitLabel(falseLabel);
-        codeGen.emit("li " + resultReg + ", 0", "AND: result is false");
+        codeGen.emit("addiu " + resultReg + ", $zero, 0", "AND: result is false");
         
         // End label
         codeGen.emitLabel(endLabel);

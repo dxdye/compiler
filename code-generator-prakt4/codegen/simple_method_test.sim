@@ -1,0 +1,21 @@
+public class SimpleMethodTest {
+    static int result;
+
+    public static int getConstant() {
+        return 42;
+    }
+
+    public static void setResult() {
+        result = 99;
+    }
+
+    public static void main() {
+        int x;
+        
+        x = getConstant();
+        setResult();
+        
+        System.out.println(x);
+        System.out.println(result);
+    }
+}

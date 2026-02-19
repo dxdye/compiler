@@ -11,34 +11,61 @@ public class WhileStmtNode extends StmtNode {
     }    
     @Override
     public String codegen(support.CodeGenerator codeGen) {
-        support.LabelGenerator labelGen = codeGen.getLabelGenerator();
-        
-        // Generate labels for do-while loop
-        String[] labels = labelGen.newDoWhileLabels();
-        String startLabel = labels[0];
-        String condLabel = labels[1];
-        String endLabel = labels[2];
-        
-        // Start of loop body
-        codeGen.emitLabel(startLabel);
-        
-        // Generate code for loop body
-        myStmtList.codegen(codeGen);
-        
-        // Condition label
-        codeGen.emitLabel(condLabel);
-        
-        // Generate code for condition
-        String condReg = myExp.codegen(codeGen);
-        
-        // Branch if true (condition != 0), loop back
-        codeGen.emit("bne " + condReg + ", $zero, " + startLabel, "If condition true, repeat");
-        
-        // Free condition register
-        codeGen.getRegisterAllocator().freeRegister(condReg);
-        
-        // End label
-        codeGen.emitLabel(endLabel);
+        // Check if this is an accumulator-based code generator
+        if (codeGen instanceof support.AccumulatorCodeGenerator) {
+            support.AccumulatorCodeGenerator accGen = (support.AccumulatorCodeGenerator) codeGen;
+            
+            // Generate unique labels using the label generator
+            String startLabel = accGen.getLabelGenerator().newLabel("while_start");
+            String endLabel = accGen.getLabelGenerator().newLabel("while_end");
+            
+            // Start of loop - check condition first
+            codeGen.emitLabel(startLabel);
+            
+            // Generate code for condition (result in $a0)
+            myExp.codegen(codeGen);
+            
+            // Branch if false (condition == 0), exit loop - using accumulator
+            codeGen.emit("beq " + support.AccumulatorCodeGenerator.ACCUMULATOR + ", $zero, " + endLabel, "While condition false, exit loop");
+            
+            // Generate code for loop body
+            myStmtList.codegen(codeGen);
+            
+            // Jump back to start
+            codeGen.emit("j " + startLabel, "Repeat while loop");
+            
+            // End label
+            codeGen.emitLabel(endLabel);
+        } else {
+            // Original register-based approach  
+            support.LabelGenerator labelGen = codeGen.getLabelGenerator();
+            
+            // Generate labels for while loop
+            String[] labels = labelGen.newWhileLabels();
+            String startLabel = labels[0];
+            String endLabel = labels[1];
+            
+            // Start of loop - check condition first
+            codeGen.emitLabel(startLabel);
+            
+            // Generate code for condition
+            String condReg = myExp.codegen(codeGen);
+            
+            // Branch if false (condition == 0), exit loop
+            codeGen.emit("beq " + condReg + ", $zero, " + endLabel, "While condition false, exit loop");
+            
+            // Free condition register
+            codeGen.getRegisterAllocator().freeRegister(condReg);
+            
+            // Generate code for loop body
+            myStmtList.codegen(codeGen);
+            
+            // Jump back to start
+            codeGen.emit("j " + startLabel, "Repeat while loop");
+            
+            // End label
+            codeGen.emitLabel(endLabel);
+        }
         
         return null;
     }

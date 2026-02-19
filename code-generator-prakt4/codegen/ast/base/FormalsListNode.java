@@ -30,6 +30,14 @@ public class FormalsListNode extends ASTnode {
         return paramTypes;
     }
     
+    public int getParamCount() {
+        return myFormals.length();
+    }
+    
+    public Sequence getSequence() {
+        return myFormals;
+    }
+    
     @Override
     public boolean namecheck(SymbolTable st) {
         this.symbolTable = st;

@@ -1,0 +1,194 @@
+name: Compiler Tests
+
+on:
+  push:
+    branches: [ main, feat/*, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-lexer:
+    name: Lexer (Praktikum 1)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Install JFlex and Java Cup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jflex default-jdk-headless
+    
+    - name: Build Lexer
+      working-directory: lexer-prakt1/scanner
+      run: |
+        make clean
+        make
+    
+    - name: Test Lexer with Good Input
+      working-directory: lexer-prakt1/scanner
+      run: |
+        java -cp .:../../jars/java-cup-11b-runtime.jar P2 tbertr-helloWorld-good.sim
+        echo "[PASS] Good input test passed"
+    
+    - name: Test Lexer with Bad Input
+      working-directory: lexer-prakt1/scanner
+      run: |
+        java -cp .:../../jars/java-cup-11b-runtime.jar P2 tbertr-helloWorld-bad.sim || true
+        echo "[PASS] Bad input test completed"
+
+  test-parser:
+    name: Parser (Praktikum 2)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Install JFlex and Java Cup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jflex default-jdk-headless
+    
+    - name: Build Parser
+      working-directory: parser-prakt2/parser
+      run: |
+        make clean
+        make
+    
+    - name: Test Parser
+      working-directory: parser-prakt2/parser
+      run: |
+        java -cp .:../../jars/java-cup-11b-runtime.jar P3 test.sim
+        echo "[PASS] Parser test passed"
+
+  test-semantic:
+    name: Semantic Analysis (Praktikum 3)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Install JFlex and Java Cup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jflex default-jdk-headless
+    
+    - name: Build Type Checker
+      working-directory: semantic-analysis-prakt3/typechecker
+      run: |
+        make clean
+        make
+    
+    - name: Test Correct Programs
+      working-directory: semantic-analysis-prakt3/typechecker
+      run: |
+        echo "Testing simple_correct.sim..."
+        java -cp .:classes:../../jars/java-cup-11b-runtime.jar P4 tests/simple_correct.sim tests/simple_correct.out
+        echo "[PASS] simple_correct.sim"
+        
+        echo "Testing comprehensive_test.sim..."
+        java -cp .:classes:../../jars/java-cup-11b-runtime.jar P4 tests/comprehensive_test.sim tests/comprehensive_test.out
+        echo "[PASS] comprehensive_test.sim"
+    
+    - name: Test Name Errors (Should Fail)
+      working-directory: semantic-analysis-prakt3/typechecker
+      run: |
+        echo "Testing test_name_error.sim (should report errors)..."
+        java -cp .:classes:../../jars/java-cup-11b-runtime.jar P4 tests/test_name_error.sim tests/test_name_error.out 2>&1 | grep -q "error" && echo "[PASS] Name error detected" || exit 1
+    
+    - name: Test Type Errors (Should Fail)
+      working-directory: semantic-analysis-prakt3/typechecker
+      run: |
+        echo "Testing test_type_error.sim (should report errors)..."
+        java -cp .:classes:../../jars/java-cup-11b-runtime.jar P4 tests/test_type_error.sim tests/test_type_error.out 2>&1 | grep -q "error" && echo "[PASS] Type error detected" || exit 1
+
+  test-codegen:
+    name: Code Generator (Praktikum 4)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
+    - name: Install JFlex and Java Cup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jflex default-jdk-headless
+    
+    - name: Build Code Generator
+      working-directory: code-generator-prakt4/codegen
+      run: |
+        make clean
+        make
+    
+    - name: Test Simple Code Generation
+      working-directory: code-generator-prakt4/codegen
+      run: make test-codegen-simple
+    
+    - name: Test Comprehensive Code Generation
+      working-directory: code-generator-prakt4/codegen
+      run: make test-codegen-comprehensive
+    
+    - name: Verify ABI Compliance
+      working-directory: code-generator-prakt4/codegen
+      run: make test-abi
+    
+    - name: Upload Generated Assembly
+      uses: actions/upload-artifact@v4
+      with:
+        name: generated-mips-assembly
+        path: |
+          code-generator-prakt4/codegen/tests/*.asm
+        retention-days: 7
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [test-lexer, test-parser, test-semantic, test-codegen]
+    if: always()
+    
+    steps:
+    - name: Check Results
+      run: |
+        echo "==================================="
+        echo "Compiler Test Suite Results"
+        echo "==================================="
+        echo "Lexer:            ${{ needs.test-lexer.result }}"
+        echo "Parser:           ${{ needs.test-parser.result }}"
+        echo "Semantic:         ${{ needs.test-semantic.result }}"
+        echo "Code Generator:   ${{ needs.test-codegen.result }}"
+        echo "==================================="
+        
+        if [ "${{ needs.test-lexer.result }}" == "success" ] && \
+           [ "${{ needs.test-parser.result }}" == "success" ] && \
+           [ "${{ needs.test-semantic.result }}" == "success" ] && \
+           [ "${{ needs.test-codegen.result }}" == "success" ]; then
+          echo "All tests PASSED!"
+          exit 0
+        else
+          echo "Some tests FAILED!"
+          exit 1
+        fi
