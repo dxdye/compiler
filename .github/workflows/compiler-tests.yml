@@ -27,7 +27,9 @@ jobs:
     
     - name: Build Lexer
       working-directory: lexer-prakt1/scanner
-      run: make
+      run: |
+        make clean
+        make
     
     - name: Test Lexer with Good Input
       working-directory: lexer-prakt1/scanner
@@ -61,7 +63,9 @@ jobs:
     
     - name: Build Parser
       working-directory: parser-prakt2/parser
-      run: make
+      run: |
+        make clean
+        make
     
     - name: Test Parser
       working-directory: parser-prakt2/parser
@@ -89,7 +93,9 @@ jobs:
     
     - name: Build Type Checker
       working-directory: semantic-analysis-prakt3/typechecker
-      run: make
+      run: |
+        make clean
+        make
     
     - name: Test Correct Programs
       working-directory: semantic-analysis-prakt3/typechecker
@@ -134,7 +140,9 @@ jobs:
     
     - name: Build Code Generator
       working-directory: code-generator-prakt4/codegen
-      run: make
+      run: |
+        make clean
+        make
     
     - name: Test Simple Code Generation
       working-directory: code-generator-prakt4/codegen

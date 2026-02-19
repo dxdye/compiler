@@ -1,2 +1,25 @@
 *.class
 *.pdf
+parser.java
+simple.jlex.java
+sym.java
+Yylex.java
+
+# Build artifacts
+classes/
+*.jar
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+*.out
+*.asm
